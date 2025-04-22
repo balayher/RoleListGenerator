@@ -5,10 +5,12 @@ import (
 	"slices"
 )
 
-func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce int, jailor, gf, cl bool) ([]string, []string, []string) {
+func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a int, jailor, gf, cl bool) ([]string, []string, []string, []string, []string) {
 	town := []string{}
 	mafia := []string{}
 	coven := []string{}
+	neutral := []string{}
+	allAny := []string{}
 
 	townInvestigative := []string{
 		"Investigator",
@@ -44,7 +46,6 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce int, jailor, gf, cl bool
 		"Jailor",
 		"Veteran",
 		"Vigilante",
-		"Vampire_Hunter",
 		"Gambler",
 	}
 
@@ -85,6 +86,43 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce int, jailor, gf, cl bool
 		"Frostbringer",
 	}
 
+	neutralKilling := []string{
+		"Arsonist",
+		"Juggernaut",
+		"Serial_Killer",
+		"Werewolf",
+		"Mutator",
+		"Horticulturist",
+		"Shapeshifter",
+		"Shroud",
+		"Bombardier",
+		"Gargoyle",
+	}
+
+	neutralEvil := []string{
+		"Executioner",
+		"Jester",
+		"Witch",
+		"Turncoat(Mafia)",
+		"Turncoat(Coven)",
+	}
+
+	neutralChaos := []string{
+		"Pirate",
+		"Plaguebearer",
+		"Vampire",
+		"Inquisitor",
+		"Anarchist",
+		"Quack",
+		"Stalker",
+	}
+
+	neutralBenign := []string{
+		"Amnesiac",
+		"Guardian_Angel",
+		"Survivor",
+	}
+
 	unique := []string{
 		"Cleric",
 		"Oracle",
@@ -92,6 +130,7 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce int, jailor, gf, cl bool
 		"Retributionist",
 		"Governor",
 		"Prosecutor",
+		"Monarch",
 		"Jailor",
 		"Veteran",
 		"Godfather",
@@ -111,6 +150,13 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce int, jailor, gf, cl bool
 		"Siren",
 		"Voodoo_Queen",
 		"Frostbringer",
+		"Juggernaut",
+		"Werewolf",
+		"Pirate",
+		"Plaguebearer",
+		"Mutator",
+		"Inquisitor",
+		"Anarchist",
 	}
 
 	if gf && mk > 0 {
@@ -121,14 +167,32 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce int, jailor, gf, cl bool
 	mafiaSupport, mafia = randomRoleSelection(ms, mafiaSupport, unique, mafia)
 	randomMafia := slices.Concat(mafiaKilling, mafiaDeception, mafiaSupport)
 	if gf && rm > 0 && !slices.Contains(mafia, "Godfather") {
-		gf, rm, randomMafia, mafia = insertGuaranteedRole(rm, randomMafia, mafia, "Godfather")
+		_, rm, randomMafia, mafia = insertGuaranteedRole(rm, randomMafia, mafia, "Godfather")
 	}
 	randomMafia, mafia = randomRoleSelection(rm, randomMafia, unique, mafia)
 
 	if cl && ce > 0 {
-		cl, ce, covenEvil, coven = insertGuaranteedRole(ce, covenEvil, coven, "Coven_Leader")
+		_, ce, covenEvil, coven = insertGuaranteedRole(ce, covenEvil, coven, "Coven_Leader")
 	}
 	covenEvil, coven = randomRoleSelection(ce, covenEvil, unique, coven)
+
+	if len(mafia) == 0 {
+		neutralEvil = removeUnique("Turncoat(Mafia)", neutralEvil)
+	}
+	if len(coven) == 0 {
+		neutralEvil = removeUnique("Turncoat(Coven)", neutralEvil)
+	}
+
+	neutralKilling, neutral = randomRoleSelection(nk, neutralKilling, unique, neutral)
+	neutralChaos, neutral = randomRoleSelection(nc, neutralChaos, unique, neutral)
+	neutralEvil, neutral = randomRoleSelection(ne, neutralEvil, unique, neutral)
+	neutralBenign, neutral = randomRoleSelection(nb, neutralBenign, unique, neutral)
+	randomNeutral := slices.Concat(neutralKilling, neutralChaos, neutralEvil, neutralBenign)
+	randomNeutral, neutral = randomRoleSelection(rn, randomNeutral, unique, neutral)
+
+	if slices.Contains(neutral, "Vampire") {
+		townKilling = append(townKilling, "Vampire_Hunter")
+	}
 
 	if jailor && tk > 0 {
 		jailor, tk, townKilling, town = insertGuaranteedRole(tk, townKilling, town, "Jailor")
@@ -139,11 +203,14 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce int, jailor, gf, cl bool
 	townKilling, town = randomRoleSelection(tk, townKilling, unique, town)
 	randomTown := slices.Concat(townInvestigative, townProtective, townSupport, townKilling)
 	if jailor && rt > 0 && !slices.Contains(town, "Jailor") {
-		jailor, rt, randomTown, town = insertGuaranteedRole(rt, randomTown, town, "Jailor")
+		_, rt, randomTown, town = insertGuaranteedRole(rt, randomTown, town, "Jailor")
 	}
 	randomTown, town = randomRoleSelection(rt, randomTown, unique, town)
 
-	return town, mafia, coven
+	anyRole := slices.Concat(randomTown, randomMafia, randomNeutral, covenEvil)
+	_, allAny = randomRoleSelection(a, anyRole, unique, allAny)
+
+	return town, mafia, coven, neutral, allAny
 }
 
 func removeUnique(role string, rolelist []string) []string {

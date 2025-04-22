@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	var ti, tp, ts, tk, rt, mk, ms, md, rm, ce int
+	var ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a int
 	jailor, gf, cl := false, false, false
 
 	rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -99,14 +99,47 @@ func main() {
 		cl = getYesNo()
 	}
 
-	fmt.Printf("Your Town has %v TI, %v TP, %v TS, %v TK, and %v RT\n", ti, tp, ts, tk, rt)
-	fmt.Printf("Your Mafia has %v MK, %v MS, %v MD, and %v RM\n", mk, ms, md, rm)
+	fmt.Print("Enter the number of Neutral Killing: ")
+	nk, err = getInput()
+	if err != nil {
+		fmt.Println("Invalid input, NK set to 0")
+	}
+	fmt.Print("Enter the number of Neutral Chaos: ")
+	nc, err = getInput()
+	if err != nil {
+		fmt.Println("Invalid input, NC set to 0")
+	}
+	fmt.Print("Enter the number of Neutral Evil: ")
+	ne, err = getInput()
+	if err != nil {
+		fmt.Println("Invalid input, NE set to 0")
+	}
+	fmt.Print("Enter the number of Neutral Benign: ")
+	nb, err = getInput()
+	if err != nil {
+		fmt.Println("Invalid input, NB set to 0")
+	}
+	fmt.Print("Enter the number of Random Netural: ")
+	rn, err = getInput()
+	if err != nil {
+		fmt.Println("Invalid input, RN set to 0")
+	}
 
-	town, mafia, coven := createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, jailor, gf, cl)
+	fmt.Print("Enter the number of Any: ")
+	a, err = getInput()
+	if err != nil {
+		fmt.Println("Invalid input, Any set to 0")
+	}
+
+	town, mafia, coven, neutral, any := createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, jailor, gf, cl)
 	fmt.Println("Town:")
 	fmt.Println(town)
 	fmt.Println("Mafia:")
 	fmt.Println(mafia)
 	fmt.Println("Coven:")
 	fmt.Println(coven)
+	fmt.Println("Neutral:")
+	fmt.Println(neutral)
+	fmt.Println("Any:")
+	fmt.Println(any)
 }
