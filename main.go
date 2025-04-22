@@ -7,11 +7,17 @@ import (
 )
 
 func main() {
+	// Initializing input variables.
 	var ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a int
 	jailor, gf, cl := false, false, false
 
+	// Seeding randomization
 	rand.New(rand.NewSource(time.Now().UnixNano()))
 
+	// Get user input for the amount of each role category is requested.
+	// If the input is not an integer, the value is defaulted to 0.
+	// Prompts if user wants a guaranteed Jailor, Godfather, or Coven Leader if role could be generated.
+	// If a role category has a maximum number, the value will be set to that maximum if exceeded.
 	fmt.Print("Enter the number of Town Investigative: ")
 	ti, err := getInput()
 	if err != nil {
@@ -64,7 +70,7 @@ func main() {
 		gf = getYesNo()
 	}
 
-	fmt.Print("Enter the number of Mafis Support: ")
+	fmt.Print("Enter the number of Mafia Support: ")
 	ms, err = getInput()
 	if err != nil {
 		fmt.Println("Invalid input, MS set to 0")
@@ -83,6 +89,11 @@ func main() {
 	if (mk == 0) && (rm > 0) {
 		fmt.Print("Do you want a guaranteed Godfather? ")
 		gf = getYesNo()
+	}
+
+	if md+ms > 0 && mk+rm == 0 {
+		mk++
+		fmt.Println("MS or MD detected without MK or RM, one MK added.")
 	}
 
 	fmt.Print("Enter the number of Coven Evil: ")
@@ -131,7 +142,9 @@ func main() {
 		fmt.Println("Invalid input, Any set to 0")
 	}
 
+	// Calls createRoles to generate each set of roles, then prints them to terminal.
 	town, mafia, coven, neutral, any := createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, jailor, gf, cl)
+	fmt.Println()
 	fmt.Println("Town:")
 	fmt.Println(town)
 	fmt.Println("Mafia:")

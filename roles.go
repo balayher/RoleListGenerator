@@ -6,12 +6,14 @@ import (
 )
 
 func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a int, jailor, gf, cl bool) ([]string, []string, []string, []string, []string) {
+	// Initializes slices for each faction.
 	town := []string{}
 	mafia := []string{}
 	coven := []string{}
 	neutral := []string{}
 	allAny := []string{}
 
+	// Defines each Town role category.
 	townInvestigative := []string{
 		"Investigator",
 		"Sheriff",
@@ -49,6 +51,11 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a i
 		"Gambler",
 	}
 
+	// Defines each Mafia role category, plus a Godfather/Mafioso slice to guarantee one exists when necessary.
+	gfMafioso := []string{
+		"Godfather",
+		"Mafioso",
+	}
 	mafiaKilling := []string{
 		"Godfather",
 		"Mafioso",
@@ -73,6 +80,7 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a i
 		"Stager",
 	}
 
+	// Defines the Coven role category.
 	covenEvil := []string{
 		"Coven_Leader",
 		"Hex_Master",
@@ -86,6 +94,7 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a i
 		"Frostbringer",
 	}
 
+	// Defines each Netural role category.
 	neutralKilling := []string{
 		"Arsonist",
 		"Juggernaut",
@@ -98,7 +107,6 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a i
 		"Bombardier",
 		"Gargoyle",
 	}
-
 	neutralEvil := []string{
 		"Executioner",
 		"Jester",
@@ -106,7 +114,6 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a i
 		"Turncoat(Mafia)",
 		"Turncoat(Coven)",
 	}
-
 	neutralChaos := []string{
 		"Pirate",
 		"Plaguebearer",
@@ -116,13 +123,13 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a i
 		"Quack",
 		"Stalker",
 	}
-
 	neutralBenign := []string{
 		"Amnesiac",
 		"Guardian_Angel",
 		"Survivor",
 	}
 
+	// Defines which roles are unique.
 	unique := []string{
 		"Cleric",
 		"Oracle",
@@ -159,23 +166,35 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a i
 		"Anarchist",
 	}
 
+	// Adds Godfather if guaranteed, else adds either Godfather or Mafioso if Mafia exists.
 	if gf && mk > 0 {
-		gf, mk, mafiaKilling, mafia = insertGuaranteedRole(mk, mafiaKilling, mafia, "Godfather")
+		mk, mafiaKilling, mafia = insertGuaranteedRole(mk, mafiaKilling, mafia, "Godfather")
+	} else if gf && rm > 0 {
+		rm, mafiaKilling, mafia = insertGuaranteedRole(rm, mafiaKilling, mafia, "Godfather")
+	} else if mk > 0 {
+		_, mafia = randomRoleSelection(1, gfMafioso, unique, mafia)
+		mk--
+		mafiaKilling = removeUnique(mafia[0], mafiaKilling)
+	} else if rm > 0 {
+		_, mafia = randomRoleSelection(1, gfMafioso, unique, mafia)
+		rm--
+		mafiaKilling = removeUnique(mafia[0], mafiaKilling)
 	}
+
+	// Adds all other Mafia roles requested.
 	mafiaKilling, mafia = randomRoleSelection(mk, mafiaKilling, unique, mafia)
 	mafiaDeception, mafia = randomRoleSelection(md, mafiaDeception, unique, mafia)
 	mafiaSupport, mafia = randomRoleSelection(ms, mafiaSupport, unique, mafia)
 	randomMafia := slices.Concat(mafiaKilling, mafiaDeception, mafiaSupport)
-	if gf && rm > 0 && !slices.Contains(mafia, "Godfather") {
-		_, rm, randomMafia, mafia = insertGuaranteedRole(rm, randomMafia, mafia, "Godfather")
-	}
 	randomMafia, mafia = randomRoleSelection(rm, randomMafia, unique, mafia)
 
+	// Adds Coven Leader if guaranteed, then adds all other Coven roles requested.
 	if cl && ce > 0 {
-		_, ce, covenEvil, coven = insertGuaranteedRole(ce, covenEvil, coven, "Coven_Leader")
+		ce, covenEvil, coven = insertGuaranteedRole(ce, covenEvil, coven, "Coven_Leader")
 	}
 	covenEvil, coven = randomRoleSelection(ce, covenEvil, unique, coven)
 
+	// Removes Turncoats from the NE list if either Mafia or Coven doesn't exist.
 	if len(mafia) == 0 {
 		neutralEvil = removeUnique("Turncoat(Mafia)", neutralEvil)
 	}
@@ -183,6 +202,7 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a i
 		neutralEvil = removeUnique("Turncoat(Coven)", neutralEvil)
 	}
 
+	// Adds all Neutral roles requested.
 	neutralKilling, neutral = randomRoleSelection(nk, neutralKilling, unique, neutral)
 	neutralChaos, neutral = randomRoleSelection(nc, neutralChaos, unique, neutral)
 	neutralEvil, neutral = randomRoleSelection(ne, neutralEvil, unique, neutral)
@@ -190,29 +210,34 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a i
 	randomNeutral := slices.Concat(neutralKilling, neutralChaos, neutralEvil, neutralBenign)
 	randomNeutral, neutral = randomRoleSelection(rn, randomNeutral, unique, neutral)
 
+	// If Vampires exist, adds Vampire Hunter to the Town Killing list.
 	if slices.Contains(neutral, "Vampire") {
 		townKilling = append(townKilling, "Vampire_Hunter")
 	}
 
+	// Adds Jailor if guaranteed.
 	if jailor && tk > 0 {
-		jailor, tk, townKilling, town = insertGuaranteedRole(tk, townKilling, town, "Jailor")
+		tk, townKilling, town = insertGuaranteedRole(tk, townKilling, town, "Jailor")
+	} else if jailor && rt > 0 {
+		rt, townKilling, town = insertGuaranteedRole(rt, townKilling, town, "Jailor")
 	}
+
+	// Adds all other Town roles requested.
 	townInvestigative, town = randomRoleSelection(ti, townInvestigative, unique, town)
 	townProtective, town = randomRoleSelection(tp, townProtective, unique, town)
 	townSupport, town = randomRoleSelection(ts, townSupport, unique, town)
 	townKilling, town = randomRoleSelection(tk, townKilling, unique, town)
 	randomTown := slices.Concat(townInvestigative, townProtective, townSupport, townKilling)
-	if jailor && rt > 0 && !slices.Contains(town, "Jailor") {
-		_, rt, randomTown, town = insertGuaranteedRole(rt, randomTown, town, "Jailor")
-	}
 	randomTown, town = randomRoleSelection(rt, randomTown, unique, town)
 
+	// Adds all Any roles requested.
 	anyRole := slices.Concat(randomTown, randomMafia, randomNeutral, covenEvil)
 	_, allAny = randomRoleSelection(a, anyRole, unique, allAny)
 
 	return town, mafia, coven, neutral, allAny
 }
 
+// Removes Unique roles from the role category when the role is added to the list.
 func removeUnique(role string, rolelist []string) []string {
 	i := 0
 	for idx, item := range rolelist {
@@ -224,6 +249,7 @@ func removeUnique(role string, rolelist []string) []string {
 	return rolelist[:i]
 }
 
+// Randomly adds an eligible role to the role list and checks if it is unique.
 func randomRoleSelection(num int, roleGroup, unique, roles []string) ([]string, []string) {
 	for i := 0; i < num; i++ {
 		randomIdx := rand.Intn(len(roleGroup))
@@ -236,9 +262,10 @@ func randomRoleSelection(num int, roleGroup, unique, roles []string) ([]string, 
 	return roleGroup, roles
 }
 
-func insertGuaranteedRole(num int, roleGroup, roles []string, role string) (bool, int, []string, []string) {
+// Adds a guaranteed role to the role list.
+func insertGuaranteedRole(num int, roleGroup, roles []string, role string) (int, []string, []string) {
 	roles = append(roles, role)
 	roleGroup = removeUnique(role, roleGroup)
 	num--
-	return false, num, roleGroup, roles
+	return num, roleGroup, roles
 }
