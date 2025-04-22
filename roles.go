@@ -5,8 +5,10 @@ import (
 	"slices"
 )
 
-func createRoles(ti, tp, ts, tk, rt int) []string {
+func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce int, jailor, gf, cl bool) ([]string, []string, []string) {
 	town := []string{}
+	mafia := []string{}
+	coven := []string{}
 
 	townInvestigative := []string{
 		"Investigator",
@@ -46,6 +48,43 @@ func createRoles(ti, tp, ts, tk, rt int) []string {
 		"Gambler",
 	}
 
+	mafiaKilling := []string{
+		"Godfather",
+		"Mafioso",
+		"Ambusher",
+		"Poppet",
+	}
+	mafiaSupport := []string{
+		"Consort",
+		"Blackmailer",
+		"Consigliere",
+		"Watcher",
+		"Angler",
+		"Underboss",
+		"Bouncer",
+	}
+	mafiaDeception := []string{
+		"Disguiser",
+		"Forger",
+		"Framer",
+		"Hypnotist",
+		"Janitor",
+		"Stager",
+	}
+
+	covenEvil := []string{
+		"Coven_Leader",
+		"Hex_Master",
+		"Medusa",
+		"Potion_Master",
+		"Necromancer",
+		"Poisoner",
+		"Soultaker",
+		"Siren",
+		"Voodoo_Queen",
+		"Frostbringer",
+	}
+
 	unique := []string{
 		"Cleric",
 		"Oracle",
@@ -55,56 +94,56 @@ func createRoles(ti, tp, ts, tk, rt int) []string {
 		"Prosecutor",
 		"Jailor",
 		"Veteran",
+		"Godfather",
+		"Mafioso",
+		"Ambusher",
+		"Angler",
+		"Poppet",
+		"Underboss",
+		"Bouncer",
+		"Coven_Leader",
+		"Hex_Master",
+		"Medusa",
+		"Potion_Master",
+		"Necromancer",
+		"Poisoner",
+		"Soultaker",
+		"Siren",
+		"Voodoo_Queen",
+		"Frostbringer",
 	}
 
-	for i := 0; i < ti; i++ {
-		randomIdx := rand.Intn(len(townInvestigative))
-		randomRole := townInvestigative[randomIdx]
-		if slices.Contains(unique, randomRole) {
-			townInvestigative = removeUnique(randomRole, townInvestigative)
-		}
-		town = append(town, randomRole)
+	if gf && mk > 0 {
+		gf, mk, mafiaKilling, mafia = insertGuaranteedRole(mk, mafiaKilling, mafia, "Godfather")
 	}
-
-	for i := 0; i < tp; i++ {
-		randomIdx := rand.Intn(len(townProtective))
-		randomRole := townProtective[randomIdx]
-		if slices.Contains(unique, randomRole) {
-			townProtective = removeUnique(randomRole, townProtective)
-		}
-		town = append(town, randomRole)
+	mafiaKilling, mafia = randomRoleSelection(mk, mafiaKilling, unique, mafia)
+	mafiaDeception, mafia = randomRoleSelection(md, mafiaDeception, unique, mafia)
+	mafiaSupport, mafia = randomRoleSelection(ms, mafiaSupport, unique, mafia)
+	randomMafia := slices.Concat(mafiaKilling, mafiaDeception, mafiaSupport)
+	if gf && rm > 0 && !slices.Contains(mafia, "Godfather") {
+		gf, rm, randomMafia, mafia = insertGuaranteedRole(rm, randomMafia, mafia, "Godfather")
 	}
+	randomMafia, mafia = randomRoleSelection(rm, randomMafia, unique, mafia)
 
-	for i := 0; i < ts; i++ {
-		randomIdx := rand.Intn(len(townSupport))
-		randomRole := townSupport[randomIdx]
-		if slices.Contains(unique, randomRole) {
-			townSupport = removeUnique(randomRole, townSupport)
-		}
-		town = append(town, randomRole)
+	if cl && ce > 0 {
+		cl, ce, covenEvil, coven = insertGuaranteedRole(ce, covenEvil, coven, "Coven_Leader")
 	}
+	covenEvil, coven = randomRoleSelection(ce, covenEvil, unique, coven)
 
-	for i := 0; i < tk; i++ {
-		randomIdx := rand.Intn(len(townKilling))
-		randomRole := townKilling[randomIdx]
-		if slices.Contains(unique, randomRole) {
-			townKilling = removeUnique(randomRole, townKilling)
-		}
-		town = append(town, randomRole)
+	if jailor && tk > 0 {
+		jailor, tk, townKilling, town = insertGuaranteedRole(tk, townKilling, town, "Jailor")
 	}
-
+	townInvestigative, town = randomRoleSelection(ti, townInvestigative, unique, town)
+	townProtective, town = randomRoleSelection(tp, townProtective, unique, town)
+	townSupport, town = randomRoleSelection(ts, townSupport, unique, town)
+	townKilling, town = randomRoleSelection(tk, townKilling, unique, town)
 	randomTown := slices.Concat(townInvestigative, townProtective, townSupport, townKilling)
-
-	for i := 0; i < rt; i++ {
-		randomIdx := rand.Intn(len(randomTown))
-		randomRole := randomTown[randomIdx]
-		if slices.Contains(unique, randomRole) {
-			randomTown = removeUnique(randomRole, randomTown)
-		}
-		town = append(town, randomRole)
+	if jailor && rt > 0 && !slices.Contains(town, "Jailor") {
+		jailor, rt, randomTown, town = insertGuaranteedRole(rt, randomTown, town, "Jailor")
 	}
+	randomTown, town = randomRoleSelection(rt, randomTown, unique, town)
 
-	return town
+	return town, mafia, coven
 }
 
 func removeUnique(role string, rolelist []string) []string {
@@ -116,4 +155,23 @@ func removeUnique(role string, rolelist []string) []string {
 		}
 	}
 	return rolelist[:i]
+}
+
+func randomRoleSelection(num int, roleGroup, unique, roles []string) ([]string, []string) {
+	for i := 0; i < num; i++ {
+		randomIdx := rand.Intn(len(roleGroup))
+		randomRole := roleGroup[randomIdx]
+		if slices.Contains(unique, randomRole) {
+			roleGroup = removeUnique(randomRole, roleGroup)
+		}
+		roles = append(roles, randomRole)
+	}
+	return roleGroup, roles
+}
+
+func insertGuaranteedRole(num int, roleGroup, roles []string, role string) (bool, int, []string, []string) {
+	roles = append(roles, role)
+	roleGroup = removeUnique(role, roleGroup)
+	num--
+	return false, num, roleGroup, roles
 }
