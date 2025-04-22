@@ -9,7 +9,7 @@ import (
 func main() {
 	// Initializing input variables.
 	var ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a int
-	jailor, gf, cl := false, false, false
+	jailor, gf, cl, anyMaf, anyCov := false, false, false, true, true
 
 	// Seeding randomization
 	rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -142,8 +142,18 @@ func main() {
 		fmt.Println("Invalid input, Any set to 0")
 	}
 
+	// Prompts if Mafia or Coven should be available in Any if they don't already exist
+	if a > 0 && (mk+ms+md+rm == 0) {
+		fmt.Print("Do you want Mafia possible in your Any? ")
+		anyMaf = getYesNo()
+	}
+	if a > 0 && ce == 0 {
+		fmt.Print("Do you want Coven possible in your Any? This removes Witch from the pool. ")
+		anyCov = getYesNo()
+	}
+
 	// Calls createRoles to generate each set of roles, then prints them to terminal.
-	town, mafia, coven, neutral, any := createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, jailor, gf, cl)
+	town, mafia, coven, neutral, any := createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, jailor, gf, cl, anyMaf, anyCov)
 	fmt.Println()
 	fmt.Println("Town:")
 	fmt.Println(town)

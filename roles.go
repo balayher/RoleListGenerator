@@ -5,7 +5,7 @@ import (
 	"slices"
 )
 
-func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a int, jailor, gf, cl bool) ([]string, []string, []string, []string, []string) {
+func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a int, jailor, gf, cl, anyMaf, anyCov bool) ([]string, []string, []string, []string, []string) {
 	// Initializes slices for each faction.
 	town := []string{}
 	mafia := []string{}
@@ -195,11 +195,15 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a i
 	covenEvil, coven = randomRoleSelection(ce, covenEvil, unique, coven)
 
 	// Removes Turncoats from the NE list if either Mafia or Coven doesn't exist.
+	// Removes Witch from the NE list if Coven exists or can be rolled in an Any slot.
 	if len(mafia) == 0 {
 		neutralEvil = removeUnique("Turncoat(Mafia)", neutralEvil)
 	}
 	if len(coven) == 0 {
 		neutralEvil = removeUnique("Turncoat(Coven)", neutralEvil)
+	}
+	if len(coven) > 0 || (a > 0 && anyCov) {
+		neutralEvil = removeUnique("Witch", neutralEvil)
 	}
 
 	// Adds all Neutral roles requested.
@@ -231,8 +235,30 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a i
 	randomTown, town = randomRoleSelection(rt, randomTown, unique, town)
 
 	// Adds all Any roles requested.
-	anyRole := slices.Concat(randomTown, randomMafia, randomNeutral, covenEvil)
+	anyRole := slices.Concat(randomTown, randomNeutral)
+	if anyMaf {
+		anyRole = slices.Concat(anyRole, randomMafia)
+	}
+	if anyCov {
+		anyRole = slices.Concat(anyRole, covenEvil)
+	}
 	_, allAny = randomRoleSelection(a, anyRole, unique, allAny)
+
+	// Checks if Mafia only appeared in an Any slot and ensures that a Godfather or Mafioso exists.
+	// Replaces the first Mafia on the list with either Godfather or Mafioso if one does not already exist.
+	if len(mafia) == 0 && anyMaf && len(allAny) > 0 && !slices.Contains(allAny, "Godfather") && !slices.Contains(allAny, "Mafia") {
+		for i := 0; i < len(allAny); i++ {
+			if slices.Contains(randomMafia, allAny[i]) {
+				randInt := rand.Intn(2)
+				if randInt == 0 {
+					allAny[i] = "Godfather"
+				} else {
+					allAny[i] = "Mafioso"
+				}
+				break
+			}
+		}
+	}
 
 	return town, mafia, coven, neutral, allAny
 }
