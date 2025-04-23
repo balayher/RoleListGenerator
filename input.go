@@ -25,14 +25,15 @@ func getInput() (int, error) {
 	return intVal, nil
 }
 
-// Gets user input for a yes/no response, defaulting to yes if response is invalid or empty.
-func getYesNo() bool {
+// Gets user input for a yes/no response, defaulting to its default value if response is invalid or empty.
+func getYesNo(defVal bool) bool {
 	userInput := bufio.NewReader(os.Stdin)
 	userVal, _ := userInput.ReadString('\n')
 
 	input := strings.TrimSpace(userVal)
 	if input == "" {
-		return true
+		fmt.Printf("No input found, value set to '%v'\n", defVal)
+		return defVal
 	}
 
 	input = strings.ToLower(input)
@@ -43,6 +44,6 @@ func getYesNo() bool {
 		return false
 	}
 
-	fmt.Println("Invalid input, value set to 'Yes'")
-	return true
+	fmt.Printf("Invalid input, value set to '%v'\n", defVal)
+	return defVal
 }

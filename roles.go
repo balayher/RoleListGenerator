@@ -5,7 +5,7 @@ import (
 	"slices"
 )
 
-func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a int, jailor, gf, cl, anyMaf, anyCov bool) ([]string, []string, []string, []string, []string) {
+func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, vamp int, jailor, gf, cl, anyMaf, anyCov, anyVamp bool) ([]string, []string, []string, []string, []string) {
 	// Initializes slices for each faction.
 	town := []string{}
 	mafia := []string{}
@@ -117,7 +117,6 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a i
 	neutralChaos := []string{
 		"Pirate",
 		"Plaguebearer",
-		"Vampire",
 		"Inquisitor",
 		"Anarchist",
 		"Quack",
@@ -166,6 +165,10 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a i
 		"Anarchist",
 	}
 
+	if anyVamp {
+		neutralChaos = append(neutralChaos, "Vampire")
+	}
+
 	// Adds Godfather if guaranteed, else adds either Godfather or Mafioso if Mafia exists.
 	if gf && mk > 0 {
 		mk, mafiaKilling, mafia = insertGuaranteedRole(mk, mafiaKilling, mafia, "Godfather")
@@ -206,6 +209,10 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a i
 		neutralEvil = removeUnique("Witch", neutralEvil)
 	}
 
+	for i := 0; i < vamp; i++ {
+		_, _, neutral = insertGuaranteedRole(vamp, neutralChaos, neutral, "Vampire")
+	}
+
 	// Adds all Neutral roles requested.
 	neutralKilling, neutral = randomRoleSelection(nk, neutralKilling, unique, neutral)
 	neutralChaos, neutral = randomRoleSelection(nc, neutralChaos, unique, neutral)
@@ -242,7 +249,7 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a i
 	if anyCov {
 		anyRole = slices.Concat(anyRole, covenEvil)
 	}
-	_, allAny = randomRoleSelection(a, anyRole, unique, allAny)
+	_, allAny = anyRoleSelection(a, anyRole, unique, randomMafia, covenEvil, allAny)
 
 	// Checks if Mafia only appeared in an Any slot and ensures that a Godfather or Mafioso exists.
 	// Replaces the first Mafia on the list with either Godfather or Mafioso if one does not already exist.
@@ -280,6 +287,32 @@ func randomRoleSelection(num int, roleGroup, unique, roles []string) ([]string, 
 	for i := 0; i < num; i++ {
 		randomIdx := rand.Intn(len(roleGroup))
 		randomRole := roleGroup[randomIdx]
+		// Removes role from future rolls if Unique.
+		if slices.Contains(unique, randomRole) {
+			roleGroup = removeUnique(randomRole, roleGroup)
+		}
+		roles = append(roles, randomRole)
+	}
+	return roleGroup, roles
+}
+
+// Randomly adds an any role to the role list, checks if unique, and checks if previously invalid roles are now valid options.
+func anyRoleSelection(num int, roleGroup, unique, randomMafia, covenEvil, roles []string) ([]string, []string) {
+	for i := 0; i < num; i++ {
+		randomIdx := rand.Intn(len(roleGroup))
+		randomRole := roleGroup[randomIdx]
+		// Adds Vampire Hunter to the role group if Vampire is rolled.
+		if randomRole == "Vampire" && !slices.Contains(roleGroup, "Vampire_Hunter") {
+			roleGroup = append(roleGroup, "Vampire_Hunter")
+		}
+		// Adds Turncoat to role group if Mafia or Coven are rolled.
+		if slices.Contains(randomMafia, randomRole) && !slices.Contains(roleGroup, "Turncoat(Mafia)") {
+			roleGroup = append(roleGroup, "Turncoat(Mafia)")
+		}
+		if slices.Contains(covenEvil, randomRole) && !slices.Contains(roleGroup, "Turncoat(Coven)") {
+			roleGroup = append(roleGroup, "Turncoat(Coven)")
+		}
+		// Removes role from future rolls if Unique.
 		if slices.Contains(unique, randomRole) {
 			roleGroup = removeUnique(randomRole, roleGroup)
 		}

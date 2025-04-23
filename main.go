@@ -8,8 +8,8 @@ import (
 
 func main() {
 	// Initializing input variables.
-	var ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a int
-	jailor, gf, cl, anyMaf, anyCov := false, false, false, true, true
+	var ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, vamp int
+	jailor, gf, cl, anyMaf, anyCov, anyVamp := false, false, false, true, true, true
 
 	// Seeding randomization
 	rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -41,19 +41,14 @@ func main() {
 	if err != nil {
 		fmt.Println("Invalid input, TK set to 0")
 	}
-	if tk > 0 {
-		fmt.Print("Do you want a guaranteed Jailor? ")
-		jailor = getYesNo()
-	}
-
 	fmt.Print("Enter the number of Random Town: ")
 	rt, err = getInput()
 	if err != nil {
 		fmt.Println("Invalid input, RT set to 0")
 	}
-	if (tk == 0) && (rt > 0) {
+	if (tk > 0) || (rt > 0) {
 		fmt.Print("Do you want a guaranteed Jailor? ")
-		jailor = getYesNo()
+		jailor = getYesNo(jailor)
 	}
 
 	fmt.Print("Enter the number of Mafia Killing: ")
@@ -61,15 +56,10 @@ func main() {
 	if err != nil {
 		fmt.Println("Invalid input, MK set to 0")
 	}
-	if mk > 5 {
-		fmt.Println("Maximum value exceeded, set to 5")
-		mk = 5
+	if mk > 4 {
+		fmt.Println("Maximum value exceeded, set to 4")
+		mk = 4
 	}
-	if mk > 0 {
-		fmt.Print("Do you want a guaranteed Godfather? ")
-		gf = getYesNo()
-	}
-
 	fmt.Print("Enter the number of Mafia Support: ")
 	ms, err = getInput()
 	if err != nil {
@@ -80,15 +70,14 @@ func main() {
 	if err != nil {
 		fmt.Println("Invalid input, MD set to 0")
 	}
-
 	fmt.Print("Enter the number of Random Mafia: ")
 	rm, err = getInput()
 	if err != nil {
 		fmt.Println("Invalid input, RM set to 0")
 	}
-	if (mk == 0) && (rm > 0) {
+	if (mk > 0) || (rm > 0) {
 		fmt.Print("Do you want a guaranteed Godfather? ")
-		gf = getYesNo()
+		gf = getYesNo(gf)
 	}
 
 	if md+ms > 0 && mk+rm == 0 {
@@ -107,7 +96,13 @@ func main() {
 	}
 	if ce > 0 {
 		fmt.Print("Do you want a guaranteed Coven Leader? ")
-		cl = getYesNo()
+		cl = getYesNo(cl)
+	}
+
+	fmt.Print("Enter the number of Vampires: ")
+	vamp, err = getInput()
+	if err != nil {
+		fmt.Println("Invalid input, Vampires set to 0")
 	}
 
 	fmt.Print("Enter the number of Neutral Killing: ")
@@ -142,18 +137,23 @@ func main() {
 		fmt.Println("Invalid input, Any set to 0")
 	}
 
+	if nc > 0 || rn > 0 || a > 0 {
+		fmt.Print("Do you want Vampires as a random option? ")
+		anyVamp = getYesNo(anyVamp)
+	}
+
 	// Prompts if Mafia or Coven should be available in Any if they don't already exist
 	if a > 0 && (mk+ms+md+rm == 0) {
 		fmt.Print("Do you want Mafia possible in your Any? ")
-		anyMaf = getYesNo()
+		anyMaf = getYesNo(anyMaf)
 	}
 	if a > 0 && ce == 0 {
 		fmt.Print("Do you want Coven possible in your Any? This removes Witch from the pool. ")
-		anyCov = getYesNo()
+		anyCov = getYesNo(anyCov)
 	}
 
 	// Calls createRoles to generate each set of roles, then prints them to terminal.
-	town, mafia, coven, neutral, any := createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, jailor, gf, cl, anyMaf, anyCov)
+	town, mafia, coven, neutral, any := createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, vamp, jailor, gf, cl, anyMaf, anyCov, anyVamp)
 	fmt.Println()
 	fmt.Println("Town:")
 	fmt.Println(town)
