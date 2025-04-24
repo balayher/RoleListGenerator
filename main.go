@@ -9,7 +9,7 @@ import (
 func main() {
 	// Initializing input variables.
 	var ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, vamp int
-	jailor, gf, cl, anyMaf, anyCov, anyVamp := false, false, false, true, true, true
+	jailor, gf, cl, anyMaf, anyCov, anyVamp, custom := false, false, false, true, true, true, true
 	var ban []string
 
 	// Seeding randomization
@@ -153,6 +153,9 @@ func main() {
 		anyCov = getYesNo(anyCov)
 	}
 
+	fmt.Print("Do you want to use custom roles? ")
+	custom = getYesNo(custom)
+
 	fmt.Print("Do you want to ban any roles? Separate roles with a space, and use a _ for any multiple word role (such as Coven_Leader):\n")
 	ban, err = getBanInput()
 	if err != nil {
@@ -161,7 +164,7 @@ func main() {
 	fmt.Println()
 
 	// Calls createRoles to generate each set of roles, then prints them to terminal.
-	town, mafia, coven, neutral, anyRole := createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, vamp, jailor, gf, cl, anyMaf, anyCov, anyVamp, ban)
+	town, mafia, coven, neutral, anyRole := createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, vamp, jailor, gf, cl, anyMaf, anyCov, anyVamp, custom, ban)
 	fmt.Println()
 	fmt.Println("Town:")
 	formatOutput(town)

@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, vamp int, jailor, gf, cl, anyMaf, anyCov, anyVamp bool, ban []string) ([]string, []string, []string, []string, []string) {
+func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, vamp int, jailor, gf, cl, anyMaf, anyCov, anyVamp, custom bool, ban []string) ([]string, []string, []string, []string, []string) {
 	// Initializes slices for each faction.
 	town := []string{}
 	mafia := []string{}
@@ -23,16 +23,12 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 		"Tracker",
 		"Psychic",
 		"Spy",
-		"Seer",
-		"Detective",
 	}
 	townProtective := []string{
 		"Bodyguard",
 		"Doctor",
 		"Crusader",
 		"Trapper",
-		"Cleric",
-		"Oracle",
 	}
 	townSupport := []string{
 		"Mayor",
@@ -40,17 +36,11 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 		"Retributionist",
 		"Medium",
 		"Transporter",
-		"Monarch",
-		"Governor",
-		"Prosecutor",
-		"Jack_of_All_Trades",
-		"Timeshifter",
 	}
 	townKilling := []string{
 		"Jailor",
 		"Veteran",
 		"Vigilante",
-		"Gambler",
 	}
 
 	// Defines each Mafia role category, plus a Godfather/Mafioso slice to guarantee one exists when necessary.
@@ -62,16 +52,11 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 		"Godfather",
 		"Mafioso",
 		"Ambusher",
-		"Poppet",
 	}
 	mafiaSupport := []string{
 		"Consort",
 		"Blackmailer",
 		"Consigliere",
-		"Watcher",
-		"Angler",
-		"Underboss",
-		"Bouncer",
 	}
 	mafiaDeception := []string{
 		"Disguiser",
@@ -79,7 +64,6 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 		"Framer",
 		"Hypnotist",
 		"Janitor",
-		"Stager",
 	}
 
 	// Defines the Coven role category.
@@ -90,10 +74,6 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 		"Potion_Master",
 		"Necromancer",
 		"Poisoner",
-		"Soultaker",
-		"Siren",
-		"Voodoo_Queen",
-		"Frostbringer",
 	}
 	covenEvil = checkBans(covenEvil, ban)
 
@@ -103,32 +83,34 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 		"Juggernaut",
 		"Serial_Killer",
 		"Werewolf",
-		"Mutator",
-		"Horticulturist",
-		"Shapeshifter",
-		"Shroud",
-		"Bombardier",
-		"Gargoyle",
 	}
 	neutralEvil := []string{
 		"Executioner",
 		"Jester",
 		"Witch",
-		"Turncoat(Mafia)",
-		"Turncoat(Coven)",
 	}
 	neutralChaos := []string{
 		"Pirate",
 		"Plaguebearer",
-		"Inquisitor",
-		"Anarchist",
-		"Quack",
-		"Stalker",
 	}
 	neutralBenign := []string{
 		"Amnesiac",
 		"Guardian_Angel",
 		"Survivor",
+	}
+
+	if custom {
+		townInvestigative = append(townInvestigative, "Seer", "Detective")
+		townProtective = append(townProtective, "Cleric", "Oracle")
+		townSupport = append(townSupport, "Monarch", "Governor", "Prosecutor", "Jack_of_All_Trades", "Timeshifter")
+		townKilling = append(townKilling, "Gambler")
+		mafiaKilling = append(mafiaKilling, "Poppet")
+		mafiaSupport = append(mafiaSupport, "Watcher", "Angler", "Underboss", "Bouncer")
+		mafiaDeception = append(mafiaDeception, "Stager")
+		covenEvil = append(covenEvil, "Soultaker", "Siren", "Voodoo_Queen", "Frostbringer")
+		neutralKilling = append(neutralKilling, "Mutator", "Horticulturist", "Shapeshifter", "Shroud", "Bombardier", "Gargoyle")
+		neutralChaos = append(neutralChaos, "Inquisitor", "Anarchist", "Quack", "Stalker")
+		neutralEvil = append(neutralEvil, "Turncoat(Mafia)", "Turncoat(Coven)")
 	}
 
 	// Remove user requested banned roles from the list
@@ -443,7 +425,7 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 	}
 	if a > 0 {
 		fmt.Printf("Adding %v Any.\n", a)
-		_, allAny = anyRoleSelection(a, anyRole, unique, randomMafia, covenEvil, allAny)
+		_, allAny = anyRoleSelection(a, anyRole, unique, randomMafia, covenEvil, allAny, custom)
 	}
 
 	// Checks if Mafia only appeared in an Any slot and ensures that a Godfather or Mafioso exists.
@@ -504,7 +486,7 @@ func randomRoleSelection(num int, roleGroup, unique, roles []string) ([]string, 
 }
 
 // Randomly adds an any role to the role list, checks if unique, and checks if previously invalid roles are now valid options.
-func anyRoleSelection(num int, roleGroup, unique, randomMafia, covenEvil, roles []string) ([]string, []string) {
+func anyRoleSelection(num int, roleGroup, unique, randomMafia, covenEvil, roles []string, custom bool) ([]string, []string) {
 	for i := 0; i < num; i++ {
 		if len(roleGroup) == 0 {
 			fmt.Printf("No valid roles left in category, %v slots removed.\n", num)
@@ -517,10 +499,10 @@ func anyRoleSelection(num int, roleGroup, unique, randomMafia, covenEvil, roles 
 			roleGroup = append(roleGroup, "Vampire_Hunter")
 		}
 		// Adds Turncoat to role group if Mafia or Coven are rolled.
-		if slices.Contains(randomMafia, randomRole) && !slices.Contains(roleGroup, "Turncoat(Mafia)") {
+		if slices.Contains(randomMafia, randomRole) && !slices.Contains(roleGroup, "Turncoat(Mafia)") && custom {
 			roleGroup = append(roleGroup, "Turncoat(Mafia)")
 		}
-		if slices.Contains(covenEvil, randomRole) && !slices.Contains(roleGroup, "Turncoat(Coven)") {
+		if slices.Contains(covenEvil, randomRole) && !slices.Contains(roleGroup, "Turncoat(Coven)") && custom {
 			roleGroup = append(roleGroup, "Turncoat(Coven)")
 		}
 		// Removes role from future rolls if Unique.
