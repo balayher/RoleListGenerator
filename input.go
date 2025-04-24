@@ -62,3 +62,20 @@ func getBanInput() ([]string, error) {
 
 	return input, nil
 }
+
+func formatOutput(roleList []string) {
+	for i := 0; i < len(roleList); i++ {
+		if i > 0 {
+			if i%5 == 0 {
+				fmt.Println()
+			} else {
+				fmt.Print(", ")
+			}
+		}
+		fmt.Printf("%v", roleList[i])
+	}
+	fmt.Println()
+	if len(roleList) > 0 {
+		fmt.Println()
+	}
+}

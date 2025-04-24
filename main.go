@@ -161,16 +161,16 @@ func main() {
 	fmt.Println()
 
 	// Calls createRoles to generate each set of roles, then prints them to terminal.
-	town, mafia, coven, neutral, any := createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, vamp, jailor, gf, cl, anyMaf, anyCov, anyVamp, ban)
+	town, mafia, coven, neutral, anyRole := createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, vamp, jailor, gf, cl, anyMaf, anyCov, anyVamp, ban)
 	fmt.Println()
 	fmt.Println("Town:")
-	fmt.Println(town)
+	formatOutput(town)
 	fmt.Println("Mafia:")
-	fmt.Println(mafia)
+	formatOutput(mafia)
 	fmt.Println("Coven:")
-	fmt.Println(coven)
+	formatOutput(coven)
 	fmt.Println("Neutral:")
-	fmt.Println(neutral)
+	formatOutput(neutral)
 	fmt.Println("Any:")
-	fmt.Println(any)
+	formatOutput(anyRole)
 }
