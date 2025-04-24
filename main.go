@@ -9,34 +9,31 @@ import (
 func main() {
 	// Initializing input variables.
 	var ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, vamp int
-	jailor, gf, cl, anyMaf, anyCov, anyVamp, custom := false, false, false, true, true, true, true
+	jailor, gf, cl, anyMaf, anyCov, anyVamp, custom, numbered := false, false, false, true, true, true, true, true
 	var ban []string
+	var roleNumbers []int
 
 	// Seeding randomization
 	rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	// Get user input for the amount of each role category is requested.
-	// If the input is not an integer, the value is defaulted to 0.
-	// Prompts if user wants a guaranteed Jailor, Godfather, or Coven Leader if role could be generated.
-	// If a role category has a maximum number, the value will be set to that maximum if exceeded.
+	// If the input is not an integer, the value is set to 0.
+	// Prompts if user wants a guaranteed Jailor, Godfather, or Coven Leader if the role could be generated.
 	fmt.Print("Enter the number of Town Investigative: ")
 	ti, err := getInput()
 	if err != nil {
 		fmt.Println("Invalid input, TI set to 0")
 	}
-
 	fmt.Print("Enter the number of Town Protective: ")
 	tp, err = getInput()
 	if err != nil {
 		fmt.Println("Invalid input, TP set to 0")
 	}
-
 	fmt.Print("Enter the number of Town Support: ")
 	ts, err = getInput()
 	if err != nil {
 		fmt.Println("Invalid input, TS set to 0")
 	}
-
 	fmt.Print("Enter the number of Town Killing: ")
 	tk, err = getInput()
 	if err != nil {
@@ -77,9 +74,16 @@ func main() {
 		gf = getYesNo(gf)
 	}
 
-	if md+ms > 0 && mk+rm == 0 {
+	// Checks if Mafia Support or Deception is added without Mafia Killing or Random Mafia
+	// If so, one is changed to Mafia Killing to generate a Godfather or Mafioso
+	if ms > 0 && mk+rm == 0 {
+		ms--
 		mk++
-		fmt.Println("MS or MD detected without MK or RM, one MK added.")
+		fmt.Println("MS detected without MK or RM, replacing one MS with MK")
+	} else if md > 0 && mk+rm == 0 {
+		md--
+		mk++
+		fmt.Println("MD detected without MK or RM, replacing one MD with MK.")
 	}
 
 	fmt.Print("Enter the number of Coven Evil: ")
@@ -130,6 +134,8 @@ func main() {
 		fmt.Println("Invalid input, Any set to 0")
 	}
 
+	// Prompts if Vampires can be randomly generated
+	// This allows user to add guaranteed Vampires without having more appear randomly
 	if nc > 0 || rn > 0 || a > 0 {
 		fmt.Print("Do you want Vampires as a random option? ")
 		anyVamp = getYesNo(anyVamp)
@@ -145,9 +151,16 @@ func main() {
 		anyCov = getYesNo(anyCov)
 	}
 
+	// Toggle whether user wants to add the ISFL server custom roles or just have vanilla Town of Salem roles only
 	fmt.Print("Do you want to use custom roles? ")
 	custom = getYesNo(custom)
 
+	// Toggle whether the roles are numbered in the output
+	fmt.Print("Would you like to randomly number the roles for easy assignment? ")
+	numbered = getYesNo(numbered)
+
+	// Allows for preventing specific roles from appearing in the role list.
+	// This option may reduce the size of the final list if there are no roles left to generate in a requested category
 	fmt.Print("Do you want to ban any roles? Separate roles with a space, and use a _ for any multiple word role (such as Coven_Leader):\n")
 	ban, err = getBanInput()
 	if err != nil {
@@ -155,17 +168,28 @@ func main() {
 	}
 	fmt.Println()
 
-	// Calls createRoles to generate each set of roles, then prints them to terminal.
+	// Calls createRoles to generate all of the roles.
 	town, mafia, coven, neutral, anyRole := createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, vamp, jailor, gf, cl, anyMaf, anyCov, anyVamp, custom, ban)
+	totalRoles := len(town) + len(mafia) + len(coven) + len(neutral) + len(anyRole)
+
+	// Setup for numbering roles if option is on
+	if numbered {
+		for i := 1; i < totalRoles+1; i++ {
+			roleNumbers = append(roleNumbers, i)
+		}
+	}
+
+	// Prints the roles to the terminal
 	fmt.Println()
+	fmt.Printf("%v roles generated.\n\n", totalRoles)
 	fmt.Println("Town:")
-	formatOutput(town)
+	roleNumbers = formatOutput(town, roleNumbers, numbered)
 	fmt.Println("Mafia:")
-	formatOutput(mafia)
+	roleNumbers = formatOutput(mafia, roleNumbers, numbered)
 	fmt.Println("Coven:")
-	formatOutput(coven)
+	roleNumbers = formatOutput(coven, roleNumbers, numbered)
 	fmt.Println("Neutral:")
-	formatOutput(neutral)
+	roleNumbers = formatOutput(neutral, roleNumbers, numbered)
 	fmt.Println("Any:")
-	formatOutput(anyRole)
+	_ = formatOutput(anyRole, roleNumbers, numbered)
 }

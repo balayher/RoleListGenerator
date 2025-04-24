@@ -8,7 +8,7 @@ import (
 )
 
 func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, vamp int, jailor, gf, cl, anyMaf, anyCov, anyVamp, custom bool, ban []string) ([]string, []string, []string, []string, []string) {
-	// Initializes slices for each faction.
+	// Initializes slices for each faction for the final role list.
 	town := []string{}
 	mafia := []string{}
 	coven := []string{}
@@ -99,6 +99,7 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 		"Survivor",
 	}
 
+	// If custom roles are toggled on, adds the custom roles to the role category they belong to.
 	if custom {
 		townInvestigative = append(townInvestigative, "Seer", "Detective")
 		townProtective = append(townProtective, "Cleric", "Oracle")
@@ -165,6 +166,7 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 		"Anarchist",
 	}
 
+	// Adds Vampires to random pool if allowed
 	if anyVamp && !slices.Contains(ban, "vampire") {
 		neutralChaos = append(neutralChaos, "Vampire")
 	}
@@ -228,7 +230,7 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 		ms = 0
 	}
 
-	// Adds all other Mafia roles requested.
+	// Adds all Mafia roles requested.
 	if mk > 0 {
 		fmt.Printf("Adding %v Mafia Killing.\n", mk)
 		mafiaKilling, mafia = randomRoleSelection(mk, mafiaKilling, unique, mafia)
@@ -253,13 +255,14 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 		randomMafia, mafia = randomRoleSelection(rm, randomMafia, unique, mafia)
 	}
 
+	// Converts Coven slots to Any if all Coven roles are banned.
 	if len(covenEvil) == 0 && ce > 0 {
 		fmt.Printf("No valid Coven roles, %v slots converted to Any.\n", ce)
 		a += ce
 		ce = 0
 	}
 
-	// Adds Coven Leader if guaranteed, then adds all other Coven roles requested.
+	// Adds Coven Leader if guaranteed, then adds all Coven roles requested.
 	if cl && ce > 0 {
 		fmt.Println("Adding Coven Leader.")
 		ce, covenEvil, coven = insertGuaranteedRole(ce, covenEvil, coven, "Coven_Leader")
@@ -281,7 +284,7 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 		neutralEvil = removeUnique("Witch", neutralEvil)
 	}
 
-	// Removes Vampires if banned.
+	// Converts Vampire slots to Random Neutral if banned.
 	if slices.Contains(ban, "vampire") && vamp > 0 {
 		fmt.Printf("Vampires banned, converting %v Vampire slots to Random Neutral.\n", vamp)
 		rn += vamp
@@ -290,7 +293,7 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 	// Adds guaranteed Vampires.
 	if vamp > 0 {
 		fmt.Printf("Adding %v Vampires.\n", vamp)
-		for i := 0; i < vamp; i++ {
+		for range vamp {
 			_, _, neutral = insertGuaranteedRole(vamp, neutralChaos, neutral, "Vampire")
 		}
 	}
@@ -382,7 +385,7 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 		tk = 0
 	}
 
-	// Adds all other Town roles requested.
+	// Adds all Town roles requested.
 	if ti > 0 {
 		fmt.Printf("Adding %v Town Investigative.\n", ti)
 		townInvestigative, town = randomRoleSelection(ti, townInvestigative, unique, town)
@@ -431,7 +434,7 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 	// Checks if Mafia only appeared in an Any slot and ensures that a Godfather or Mafioso exists.
 	// Replaces the first Mafia on the list with either Godfather or Mafioso if one does not already exist.
 	if len(mafia) == 0 && anyMaf && len(allAny) > 0 && !slices.Contains(allAny, "Godfather") && !slices.Contains(allAny, "Mafia") {
-		for i := 0; i < len(allAny); i++ {
+		for i := range allAny {
 			if slices.Contains(randomMafia, allAny[i]) {
 				if slices.Contains(ban, "godfather") {
 					allAny[i] = "Mafioso"
@@ -469,13 +472,14 @@ func removeUnique(role string, rolelist []string) []string {
 
 // Randomly adds an eligible role to the role list and checks if it is unique.
 func randomRoleSelection(num int, roleGroup, unique, roles []string) ([]string, []string) {
-	for i := 0; i < num; i++ {
+	for i := range num {
 		if len(roleGroup) == 0 {
 			fmt.Printf("No valid roles left in category, %v slots removed.\n", num-i)
 			return roleGroup, roles
 		}
 		randomIdx := rand.Intn(len(roleGroup))
 		randomRole := roleGroup[randomIdx]
+
 		// Removes role from future rolls if Unique.
 		if slices.Contains(unique, randomRole) {
 			roleGroup = removeUnique(randomRole, roleGroup)
@@ -487,17 +491,19 @@ func randomRoleSelection(num int, roleGroup, unique, roles []string) ([]string, 
 
 // Randomly adds an any role to the role list, checks if unique, and checks if previously invalid roles are now valid options.
 func anyRoleSelection(num int, roleGroup, unique, randomMafia, covenEvil, roles []string, custom bool) ([]string, []string) {
-	for i := 0; i < num; i++ {
+	for i := range num {
 		if len(roleGroup) == 0 {
 			fmt.Printf("No valid roles left in category, %v slots removed.\n", num-i)
 			return roleGroup, roles
 		}
 		randomIdx := rand.Intn(len(roleGroup))
 		randomRole := roleGroup[randomIdx]
+
 		// Adds Vampire Hunter to the role group if Vampire is rolled.
 		if randomRole == "Vampire" && !slices.Contains(roleGroup, "Vampire_Hunter") {
 			roleGroup = append(roleGroup, "Vampire_Hunter")
 		}
+
 		// Adds Turncoat to role group if Mafia or Coven are rolled and custom roles are turned on.
 		if slices.Contains(randomMafia, randomRole) && !slices.Contains(roleGroup, "Turncoat(Mafia)") && custom {
 			roleGroup = append(roleGroup, "Turncoat(Mafia)")
@@ -505,10 +511,12 @@ func anyRoleSelection(num int, roleGroup, unique, randomMafia, covenEvil, roles 
 		if slices.Contains(covenEvil, randomRole) && !slices.Contains(roleGroup, "Turncoat(Coven)") && custom {
 			roleGroup = append(roleGroup, "Turncoat(Coven)")
 		}
+
 		// Removes role from future rolls if Unique.
 		if slices.Contains(unique, randomRole) {
 			roleGroup = removeUnique(randomRole, roleGroup)
 		}
+
 		roles = append(roles, randomRole)
 	}
 	return roleGroup, roles
@@ -522,6 +530,7 @@ func insertGuaranteedRole(num int, roleGroup, roles []string, role string) (int,
 	return num, roleGroup, roles
 }
 
+// Removes banned roles from a role subcategory.
 func checkBans(roleGroup, ban []string) []string {
 	for i := len(roleGroup) - 1; i >= 0; i-- {
 		if slices.Contains(ban, strings.ToLower(roleGroup[i])) {

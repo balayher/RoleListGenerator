@@ -3,7 +3,9 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math/rand"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -48,6 +50,8 @@ func getYesNo(defVal bool) bool {
 	return defVal
 }
 
+// Gets user input for a list of roles banned from generation, defaulting to none.
+// Formats the submitted roles to remove white space and ignore capitalization.
 func getBanInput() ([]string, error) {
 	userInput := bufio.NewReader(os.Stdin)
 	userVal, err := userInput.ReadString('\n')
@@ -63,7 +67,9 @@ func getBanInput() ([]string, error) {
 	return input, nil
 }
 
-func formatOutput(roleList []string) {
+// Formats the role list output to make it more readable
+// If numbered output is toggled, adds a distinct number to each role when printing
+func formatOutput(roleList []string, roleNumbers []int, numbered bool) []int {
 	for i := 0; i < len(roleList); i++ {
 		if i > 0 {
 			if i%5 == 0 {
@@ -72,10 +78,16 @@ func formatOutput(roleList []string) {
 				fmt.Print(", ")
 			}
 		}
+		if numbered {
+			randomIdx := rand.Intn(len(roleNumbers))
+			fmt.Printf("%v.) ", roleNumbers[randomIdx])
+			roleNumbers = slices.Delete(roleNumbers, randomIdx, randomIdx+1)
+		}
 		fmt.Printf("%v", roleList[i])
 	}
 	fmt.Println()
 	if len(roleList) > 0 {
 		fmt.Println()
 	}
+	return roleNumbers
 }
