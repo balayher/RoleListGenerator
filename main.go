@@ -57,10 +57,6 @@ func main() {
 	if err != nil {
 		fmt.Println("Invalid input, MK set to 0")
 	}
-	//if mk > 4 {
-	//	fmt.Println("Maximum value exceeded, set to 4")
-	//	mk = 4
-	//}
 	fmt.Print("Enter the number of Mafia Support: ")
 	ms, err = getInput()
 	if err != nil {
@@ -91,10 +87,6 @@ func main() {
 	if err != nil {
 		fmt.Println("Invalid input, CE set to 0")
 	}
-	//if ce > 10 {
-	//	fmt.Println("Maximum value exceeded, set to 10")
-	//	ce = 10
-	//}
 	if ce > 0 {
 		fmt.Print("Do you want a guaranteed Coven Leader? ")
 		cl = getYesNo(cl)

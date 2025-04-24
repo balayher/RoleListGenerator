@@ -471,7 +471,7 @@ func removeUnique(role string, rolelist []string) []string {
 func randomRoleSelection(num int, roleGroup, unique, roles []string) ([]string, []string) {
 	for i := 0; i < num; i++ {
 		if len(roleGroup) == 0 {
-			fmt.Printf("No valid roles left in category, %v slots removed.\n", num)
+			fmt.Printf("No valid roles left in category, %v slots removed.\n", num-i)
 			return roleGroup, roles
 		}
 		randomIdx := rand.Intn(len(roleGroup))
@@ -489,7 +489,7 @@ func randomRoleSelection(num int, roleGroup, unique, roles []string) ([]string, 
 func anyRoleSelection(num int, roleGroup, unique, randomMafia, covenEvil, roles []string, custom bool) ([]string, []string) {
 	for i := 0; i < num; i++ {
 		if len(roleGroup) == 0 {
-			fmt.Printf("No valid roles left in category, %v slots removed.\n", num)
+			fmt.Printf("No valid roles left in category, %v slots removed.\n", num-i)
 			return roleGroup, roles
 		}
 		randomIdx := rand.Intn(len(roleGroup))
@@ -498,7 +498,7 @@ func anyRoleSelection(num int, roleGroup, unique, randomMafia, covenEvil, roles 
 		if randomRole == "Vampire" && !slices.Contains(roleGroup, "Vampire_Hunter") {
 			roleGroup = append(roleGroup, "Vampire_Hunter")
 		}
-		// Adds Turncoat to role group if Mafia or Coven are rolled.
+		// Adds Turncoat to role group if Mafia or Coven are rolled and custom roles are turned on.
 		if slices.Contains(randomMafia, randomRole) && !slices.Contains(roleGroup, "Turncoat(Mafia)") && custom {
 			roleGroup = append(roleGroup, "Turncoat(Mafia)")
 		}

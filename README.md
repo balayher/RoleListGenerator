@@ -10,7 +10,16 @@ Before running this project locally, ensure you have the following installed:
 
 ## Installations
 
-Download the files in this repository into a single folder. Enter 'go build' in the terminal to compile the program. Then enter 'go run RoleListGenerator' to run the program.
+1. Ensure you have a valid version of [Go](https://go.dev/doc/install) installed. 
+2. Download the files in this repository into a single folder. 
+3. Navigate to that folder in your terminal and compile the program. 
+``` bash
+go build
+```
+4. The Role List Generator is now ready to run!
+``` bash
+go run RoleListGenerator
+```
 
 ## How to Use
 
