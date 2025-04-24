@@ -47,3 +47,18 @@ func getYesNo(defVal bool) bool {
 	fmt.Printf("Invalid input, value set to '%v'\n", defVal)
 	return defVal
 }
+
+func getBanInput() ([]string, error) {
+	userInput := bufio.NewReader(os.Stdin)
+	userVal, err := userInput.ReadString('\n')
+	if err != nil {
+		return []string{}, err
+	}
+
+	input := strings.Split(strings.ToLower(userVal), " ")
+	for i := 0; i < len(input); i++ {
+		input[i] = strings.TrimSpace(input[i])
+	}
+
+	return input, nil
+}

@@ -10,6 +10,7 @@ func main() {
 	// Initializing input variables.
 	var ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, vamp int
 	jailor, gf, cl, anyMaf, anyCov, anyVamp := false, false, false, true, true, true
+	var ban []string
 
 	// Seeding randomization
 	rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -56,10 +57,10 @@ func main() {
 	if err != nil {
 		fmt.Println("Invalid input, MK set to 0")
 	}
-	if mk > 4 {
-		fmt.Println("Maximum value exceeded, set to 4")
-		mk = 4
-	}
+	//if mk > 4 {
+	//	fmt.Println("Maximum value exceeded, set to 4")
+	//	mk = 4
+	//}
 	fmt.Print("Enter the number of Mafia Support: ")
 	ms, err = getInput()
 	if err != nil {
@@ -90,10 +91,10 @@ func main() {
 	if err != nil {
 		fmt.Println("Invalid input, CE set to 0")
 	}
-	if ce > 10 {
-		fmt.Println("Maximum value exceeded, set to 10")
-		ce = 10
-	}
+	//if ce > 10 {
+	//	fmt.Println("Maximum value exceeded, set to 10")
+	//	ce = 10
+	//}
 	if ce > 0 {
 		fmt.Print("Do you want a guaranteed Coven Leader? ")
 		cl = getYesNo(cl)
@@ -152,8 +153,15 @@ func main() {
 		anyCov = getYesNo(anyCov)
 	}
 
+	fmt.Print("Do you want to ban any roles? Separate roles with a space, and use a _ for any multiple word role (such as Coven_Leader):\n")
+	ban, err = getBanInput()
+	if err != nil {
+		fmt.Println("Invalid input, no ban list set")
+	}
+	fmt.Println()
+
 	// Calls createRoles to generate each set of roles, then prints them to terminal.
-	town, mafia, coven, neutral, any := createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, vamp, jailor, gf, cl, anyMaf, anyCov, anyVamp)
+	town, mafia, coven, neutral, any := createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, vamp, jailor, gf, cl, anyMaf, anyCov, anyVamp, ban)
 	fmt.Println()
 	fmt.Println("Town:")
 	fmt.Println(town)
