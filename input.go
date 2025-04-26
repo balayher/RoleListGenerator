@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"math/rand"
 	"os"
 	"slices"
@@ -69,8 +70,9 @@ func getBanInput() ([]string, error) {
 
 // Formats the role list output to make it more readable
 // If numbered output is toggled, adds a distinct number to each role when printing
+
 func formatOutput(roleList []string, roleNumbers []int, numbered bool) []int {
-	for i := 0; i < len(roleList); i++ {
+	for i := range roleList {
 		if i > 0 {
 			if i%5 == 0 {
 				fmt.Println()
@@ -89,5 +91,18 @@ func formatOutput(roleList []string, roleNumbers []int, numbered bool) []int {
 	if len(roleList) > 0 {
 		fmt.Println()
 	}
+	return roleNumbers
+}
+
+func fileOutput(roleList []string, roleNumbers []int, numbered bool, f io.Writer) []int {
+	for i := range roleList {
+		if numbered {
+			randomIdx := rand.Intn(len(roleNumbers))
+			fmt.Fprintf(f, "%v.) ", roleNumbers[randomIdx])
+			roleNumbers = slices.Delete(roleNumbers, randomIdx, randomIdx+1)
+		}
+		fmt.Fprintf(f, "%v\n", roleList[i])
+	}
+	fmt.Fprintln(f, "")
 	return roleNumbers
 }

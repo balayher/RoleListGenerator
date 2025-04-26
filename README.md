@@ -52,9 +52,13 @@ Depending upon your inputs, you may be asked some of these follow-up yes or no q
 - If you do not have any Mafia roles, you will be asked if you want Mafia in the Any pool *(default: yes)*
 - If you do not have any Coven Evil, you will be asked if you want Coven in the Any pool *(default: yes)*
 - You will be asked if you want to use the custom roles added by the ISFL community. Saying no will only give you standard Town of Salem roles *(default: yes)*
-- You will be asked if you want the roles numbered to allow for easier assignment *(default: yes)*
 
-The last prompt will ask for any roles you want to ban. Each role must be separated by a space. Any role with multiple words must have a _ connecting the words (i.e. Coven_Leader). If you don't want any roles banned, you may leave this blank. Banned roles will overwrite guaranteed roles and Vampires if they were previously chosen.
+The last input prompt will ask for any roles you want to ban. Each role must be separated by a space. Any role with multiple words must have a _ connecting the words (i.e. Coven_Leader). If you don't want any roles banned, you may leave this blank. Banned roles will overwrite guaranteed roles and Vampires if they were previously chosen.
+
+In addition, you will have two options for receiving your roles:
+
+- You will be asked if you want the roles numbered to allow for easier assignment *(default: yes)*
+- You will be asked if you want the rolelist to be written to roles.txt. If not, they will be printed directly to the terminal *(default: no)*
 
 There are also a few unique scenarios that may influence the randomization:
 

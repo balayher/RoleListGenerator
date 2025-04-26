@@ -3,13 +3,14 @@ package main
 import (
 	"fmt"
 	"math/rand"
+	"os"
 	"time"
 )
 
 func main() {
 	// Initializing input variables.
 	var ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, vamp int
-	jailor, gf, cl, anyMaf, anyCov, anyVamp, custom, numbered := false, false, false, true, true, true, true, true
+	jailor, gf, cl, anyMaf, anyCov, anyVamp, custom, numbered, fileWrite := false, false, false, true, true, true, true, true, false
 	var ban []string
 	var roleNumbers []int
 
@@ -155,10 +156,6 @@ func main() {
 	fmt.Print("Do you want to use custom roles? ")
 	custom = getYesNo(custom)
 
-	// Toggle whether the roles are numbered in the output
-	fmt.Print("Would you like to randomly number the roles for easy assignment? ")
-	numbered = getYesNo(numbered)
-
 	// Allows for preventing specific roles from appearing in the role list.
 	// This option may reduce the size of the final list if there are no roles left to generate in a requested category
 	fmt.Print("Do you want to ban any roles? Separate roles with a space, and use a _ for any multiple word role (such as Coven_Leader):\n")
@@ -166,6 +163,15 @@ func main() {
 	if err != nil {
 		fmt.Println("Invalid input, no ban list set")
 	}
+
+	// Toggle whether the roles are numbered in the output
+	fmt.Print("Would you like to randomly number the roles for easy assignment? ")
+	numbered = getYesNo(numbered)
+
+	// Toggle whether the output is printed to terminal or to the roles.txt file
+	fmt.Print("Would you like your rolelist written to a roles.txt file? ")
+	fileWrite = getYesNo(fileWrite)
+
 	fmt.Println()
 
 	// Calls createRoles to generate all of the roles.
@@ -179,17 +185,45 @@ func main() {
 		}
 	}
 
-	// Prints the roles to the terminal
 	fmt.Println()
 	fmt.Printf("%v roles generated.\n\n", totalRoles)
-	fmt.Println("Town:")
-	roleNumbers = formatOutput(town, roleNumbers, numbered)
-	fmt.Println("Mafia:")
-	roleNumbers = formatOutput(mafia, roleNumbers, numbered)
-	fmt.Println("Coven:")
-	roleNumbers = formatOutput(coven, roleNumbers, numbered)
-	fmt.Println("Neutral:")
-	roleNumbers = formatOutput(neutral, roleNumbers, numbered)
-	fmt.Println("Any:")
-	_ = formatOutput(anyRole, roleNumbers, numbered)
+
+	// Prints the roles to the terminal
+
+	if fileWrite {
+		f, err := os.Create("roles.txt")
+		if err != nil {
+			fmt.Println(err)
+			f.Close()
+			return
+		}
+		fmt.Fprintln(f, "Town:")
+		roleNumbers = fileOutput(town, roleNumbers, numbered, f)
+		fmt.Fprintln(f, "Mafia:")
+		roleNumbers = fileOutput(mafia, roleNumbers, numbered, f)
+		fmt.Fprintln(f, "Coven:")
+		roleNumbers = fileOutput(coven, roleNumbers, numbered, f)
+		fmt.Fprintln(f, "Neutral:")
+		roleNumbers = fileOutput(neutral, roleNumbers, numbered, f)
+		fmt.Fprintln(f, "Any:")
+		_ = fileOutput(anyRole, roleNumbers, numbered, f)
+
+		err = f.Close()
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Println("roles.txt written successfully")
+	} else {
+		fmt.Println("Town:")
+		roleNumbers = formatOutput(town, roleNumbers, numbered)
+		fmt.Println("Mafia:")
+		roleNumbers = formatOutput(mafia, roleNumbers, numbered)
+		fmt.Println("Coven:")
+		roleNumbers = formatOutput(coven, roleNumbers, numbered)
+		fmt.Println("Neutral:")
+		roleNumbers = formatOutput(neutral, roleNumbers, numbered)
+		fmt.Println("Any:")
+		_ = formatOutput(anyRole, roleNumbers, numbered)
+	}
 }
