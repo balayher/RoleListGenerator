@@ -7,13 +7,17 @@ import (
 	"strings"
 )
 
-func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, vamp int, jailor, gf, cl, anyMaf, anyCov, anyVamp, custom bool, ban []string) ([]string, []string, []string, []string, []string) {
+func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, vamp int, jailor, gf, cl, anyMaf, anyCov, anyVamp, custom bool, ban []string) ([]string, []string, []string, []string, []string, []string, []string) {
 	// Initializes slices for each faction for the final role list.
 	town := []string{}
 	mafia := []string{}
 	coven := []string{}
 	neutral := []string{}
 	allAny := []string{}
+	exeList := []string{}
+	gaList := []string{}
+	exeTargets := []string{}
+	gaTargets := []string{}
 
 	// Defines each Town role category.
 	townInvestigative := []string{
@@ -166,13 +170,28 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 		"Anarchist",
 	}
 
-	// Defines which Town roles cannot be an Executioner target.
+	// Defines which Town roles cannot be Executioner targets.
 	nonExe := []string{
 		"Jailor",
 		"Mayor",
 		"Governor",
 		"Monarch",
 		"Prosecutor",
+	}
+
+	// Defines which Unique Town roles can be Executioner targets (for use when assigning Any roles).
+	uniqueExe := []string{
+		"Cleric",
+		"Oracle",
+		"Retributionist",
+		"Veteran",
+	}
+
+	// Defines which roles cannot be Guardian Angel targets.
+	nonGA := []string{
+		"Executioner",
+		"Jester",
+		"Guardian_Angel",
 	}
 
 	// Adds Vampires to random pool if allowed
@@ -264,6 +283,11 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 		randomMafia, mafia = randomRoleSelection(rm, randomMafia, unique, mafia)
 	}
 
+	// Adds rolled Mafia roles to Guardian Angel target list.
+	if len(mafia) > 0 {
+		gaList = append(gaList, mafia...)
+	}
+
 	// Converts Coven slots to Any if all Coven roles are banned.
 	if len(covenEvil) == 0 && ce > 0 {
 		fmt.Printf("No valid Coven roles, %v slots converted to Any.\n", ce)
@@ -279,6 +303,11 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 	if ce > 0 {
 		fmt.Printf("Adding %v Coven Evil.\n", ce)
 		covenEvil, coven = randomRoleSelection(ce, covenEvil, unique, coven)
+	}
+
+	// Adds rolled Coven roles to Guardian Angel target list.
+	if len(coven) > 0 {
+		gaList = append(gaList, coven...)
 	}
 
 	// Removes Turncoats from the NE list if either Mafia or Coven doesn't exist.
@@ -333,7 +362,7 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 		nb = 0
 	}
 
-	// Adds all Neutral roles requested.
+	// Adds Neutral Killing and Neutral Chaos roles requested.
 	if nk > 0 {
 		fmt.Printf("Adding %v Neutral Killing.\n", nk)
 		neutralKilling, neutral = randomRoleSelection(nk, neutralKilling, unique, neutral)
@@ -342,6 +371,14 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 		fmt.Printf("Adding %v Neutral Chaos.\n", nc)
 		neutralChaos, neutral = randomRoleSelection(nc, neutralChaos, unique, neutral)
 	}
+
+	// Adds rolled Neutral roles to Guardian Angel target list.
+	if len(neutral) > 0 {
+		gaList = append(gaList, neutral...)
+	}
+
+	// Adds Neutral Evil, Neutral Benign, and Random Neutral roles requested, then adds eligible ones to Guardian Angel target list.
+	numRoles := len(neutral)
 	if ne > 0 {
 		fmt.Printf("Adding %v Neutral Evil.\n", ne)
 		neutralEvil, neutral = randomRoleSelection(ne, neutralEvil, unique, neutral)
@@ -360,6 +397,11 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 	if rn > 0 {
 		fmt.Printf("Adding %v Random Neutral.\n", rn)
 		randomNeutral, neutral = randomRoleSelection(rn, randomNeutral, unique, neutral)
+	}
+	for i := numRoles; i < len(neutral); i++ {
+		if !slices.Contains(nonGA, neutral[i]) {
+			gaList = append(gaList, neutral[i])
+		}
 	}
 
 	// If Vampires exist, adds Vampire Hunter to the Town Killing list if it's not banned.
@@ -427,22 +469,14 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 		randomTown, town = randomRoleSelection(rt, randomTown, unique, town)
 	}
 
-	// If Executioner is rolled, checks if a valid Town role was also rolled.
-	// If no valid Town roles exist, all Executioners are converted to Jesters.
-	if slices.Contains(neutral, "Executioner") {
-		validExe := false
-		for i := range town {
-			if !slices.Contains(nonExe, town[i]) {
-				validExe = true
-				break
-			}
-		}
-		if !validExe {
-			for i := range neutral {
-				if neutral[i] == "Executioner" {
-					neutral[i] = "Jester"
-				}
-			}
+	// Adds rolled Town roles to Guardian Angel target list.
+	if len(town) > 0 {
+		gaList = append(gaList, town...)
+	}
+	// Adds eligible Town roles to Executioner target list.
+	for i := range town {
+		if !slices.Contains(nonExe, town[i]) {
+			exeList = append(exeList, town[i])
 		}
 	}
 
@@ -461,6 +495,16 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 	if a > 0 {
 		fmt.Printf("Adding %v Any.\n", a)
 		_, allAny = anyRoleSelection(a, anyRole, unique, randomTown, nonExe, randomMafia, covenEvil, ban, allAny, custom)
+	}
+
+	// Adds eligible Any roles to the GA and Executioner target lists
+	for i := range allAny {
+		if !slices.Contains(nonExe, allAny[i]) && (slices.Contains(randomTown, allAny[i]) || slices.Contains(uniqueExe, allAny[i])) {
+			exeList = append(exeList, allAny[i])
+		}
+		if !slices.Contains(nonGA, allAny[i]) {
+			gaList = append(gaList, allAny[i])
+		}
 	}
 
 	// Checks if Mafia only appeared in an Any slot and ensures that a Godfather or Mafioso exists.
@@ -487,7 +531,66 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 		}
 	}
 
-	return town, mafia, coven, neutral, allAny
+	// If Executioner is rolled, checks if a valid target was also rolled.
+	// If no valid targets, all Executioners are converted to Jesters.
+	if slices.Contains(neutral, "Executioner") && len(exeList) == 0 {
+		for i := range neutral {
+			if neutral[i] == "Executioner" {
+				neutral[i] = "Jester"
+			}
+		}
+		fmt.Println("No valid Executioner targets, converting to Jester")
+	}
+	if slices.Contains(allAny, "Executioner") && len(exeList) == 0 {
+		for i := range allAny {
+			if allAny[i] == "Executioner" {
+				allAny[i] = "Jester"
+			}
+		}
+		fmt.Println("No valid Executioner targets, converting to Jester")
+	}
+
+	// If Guardian Angel is rolled, checks if a valid target was also rolled.
+	// If no valid targets, all Guardian Angels are converted to Survivors.
+	if slices.Contains(neutral, "Guardian_Angel") && len(gaList) == 0 {
+		for i := range neutral {
+			if neutral[i] == "Guardian_Angel" {
+				neutral[i] = "Survivor"
+			}
+		}
+		fmt.Println("No valid GA targets, converting to Survivor")
+	}
+	if slices.Contains(allAny, "Guardian_Angel") && len(gaList) == 0 {
+		for i := range allAny {
+			if allAny[i] == "Guardian_Angel" {
+				allAny[i] = "Survivor"
+			}
+		}
+		fmt.Println("No valid GA targets, converting to Survivor")
+	}
+
+	// Labels Executioner and Guardian Angel targets for roles appearing multiple times.
+	if len(exeList) > 0 {
+		exeList = labelTargets(exeList)
+	}
+	if len(gaList) > 0 {
+		gaList = labelTargets(gaList)
+	}
+	// Assigns Executioner and Guardian Angel targets.
+	if slices.Contains(neutral, "Executioner") {
+		exeTargets = addTargets(neutral, exeList, exeTargets, "Executioner")
+	}
+	if slices.Contains(neutral, "Guardian_Angel") {
+		gaTargets = addTargets(neutral, gaList, gaTargets, "Guardian_Angel")
+	}
+	if slices.Contains(allAny, "Executioner") {
+		exeTargets = addTargets(allAny, exeList, exeTargets, "Executioner")
+	}
+	if slices.Contains(allAny, "Guardian_Angel") {
+		gaTargets = addTargets(allAny, gaList, gaTargets, "Guardian_Angel")
+	}
+
+	return town, mafia, coven, neutral, allAny, exeTargets, gaTargets
 }
 
 // Removes Unique roles from the role category when the role is added to the list.
@@ -575,4 +678,33 @@ func checkBans(roleGroup, ban []string) []string {
 		}
 	}
 	return roleGroup
+}
+
+// Assigns targets for Executioner and Guadian Angel roles.
+func addTargets(roleGroup, eligibleList, targetList []string, role string) []string {
+	for i := range roleGroup {
+		if roleGroup[i] == role {
+			randomIdx := rand.Intn(len(eligibleList))
+			targetList = append(targetList, eligibleList[randomIdx])
+		}
+	}
+	return targetList
+}
+
+// Distinguishes roles in target list if a role appears multiple times in the role list
+func labelTargets(targetList []string) []string {
+	for i := range targetList {
+		role := targetList[i]
+		if slices.Contains(targetList[i+1:], role) {
+			targetList[i] = fmt.Sprintf("%v (1)", targetList[i])
+			j := 2
+			for k := i + 1; k < len(targetList); k++ {
+				if targetList[k] == role {
+					targetList[k] = fmt.Sprintf("%v (%v)", targetList[k], j)
+					j++
+				}
+			}
+		}
+	}
+	return targetList
 }

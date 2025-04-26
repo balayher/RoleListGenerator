@@ -175,7 +175,7 @@ func main() {
 	fmt.Println()
 
 	// Calls createRoles to generate all of the roles.
-	town, mafia, coven, neutral, anyRole := createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, vamp, jailor, gf, cl, anyMaf, anyCov, anyVamp, custom, ban)
+	town, mafia, coven, neutral, anyRole, exeTargets, gaTargets := createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, vamp, jailor, gf, cl, anyMaf, anyCov, anyVamp, custom, ban)
 	totalRoles := len(town) + len(mafia) + len(coven) + len(neutral) + len(anyRole)
 
 	// Setup for numbering roles if option is on
@@ -188,8 +188,8 @@ func main() {
 	fmt.Println()
 	fmt.Printf("%v roles generated.\n\n", totalRoles)
 
-	// Prints the roles to the terminal
-
+	// Writes the roles to roles.txt if option is selected.
+	// Otherwise prints the roles to the terminal.
 	if fileWrite {
 		f, err := os.Create("roles.txt")
 		if err != nil {
@@ -197,16 +197,34 @@ func main() {
 			f.Close()
 			return
 		}
-		fmt.Fprintln(f, "Town:")
-		roleNumbers = fileOutput(town, roleNumbers, numbered, f)
-		fmt.Fprintln(f, "Mafia:")
-		roleNumbers = fileOutput(mafia, roleNumbers, numbered, f)
-		fmt.Fprintln(f, "Coven:")
-		roleNumbers = fileOutput(coven, roleNumbers, numbered, f)
-		fmt.Fprintln(f, "Neutral:")
-		roleNumbers = fileOutput(neutral, roleNumbers, numbered, f)
-		fmt.Fprintln(f, "Any:")
-		_ = fileOutput(anyRole, roleNumbers, numbered, f)
+		if len(town) > 0 {
+			fmt.Fprintln(f, "Town:")
+			roleNumbers = fileOutput(town, roleNumbers, numbered, f)
+		}
+		if len(mafia) > 0 {
+			fmt.Fprintln(f, "Mafia:")
+			roleNumbers = fileOutput(mafia, roleNumbers, numbered, f)
+		}
+		if len(coven) > 0 {
+			fmt.Fprintln(f, "Coven:")
+			roleNumbers = fileOutput(coven, roleNumbers, numbered, f)
+		}
+		if len(neutral) > 0 {
+			fmt.Fprintln(f, "Neutral:")
+			roleNumbers = fileOutput(neutral, roleNumbers, numbered, f)
+		}
+		if len(anyRole) > 0 {
+			fmt.Fprintln(f, "Any:")
+			_ = fileOutput(anyRole, roleNumbers, numbered, f)
+		}
+		if len(exeTargets) > 0 {
+			fmt.Fprintln(f, "Executioner Targets:")
+			_ = fileOutput(exeTargets, roleNumbers, false, f)
+		}
+		if len(gaTargets) > 0 {
+			fmt.Fprintln(f, "Guardian Angel Targets:")
+			_ = fileOutput(gaTargets, roleNumbers, false, f)
+		}
 
 		err = f.Close()
 		if err != nil {
@@ -215,15 +233,33 @@ func main() {
 		}
 		fmt.Println("roles.txt written successfully")
 	} else {
-		fmt.Println("Town:")
-		roleNumbers = formatOutput(town, roleNumbers, numbered)
-		fmt.Println("Mafia:")
-		roleNumbers = formatOutput(mafia, roleNumbers, numbered)
-		fmt.Println("Coven:")
-		roleNumbers = formatOutput(coven, roleNumbers, numbered)
-		fmt.Println("Neutral:")
-		roleNumbers = formatOutput(neutral, roleNumbers, numbered)
-		fmt.Println("Any:")
-		_ = formatOutput(anyRole, roleNumbers, numbered)
+		if len(town) > 0 {
+			fmt.Println("Town:")
+			roleNumbers = formatOutput(town, roleNumbers, numbered)
+		}
+		if len(mafia) > 0 {
+			fmt.Println("Mafia:")
+			roleNumbers = formatOutput(mafia, roleNumbers, numbered)
+		}
+		if len(coven) > 0 {
+			fmt.Println("Coven:")
+			roleNumbers = formatOutput(coven, roleNumbers, numbered)
+		}
+		if len(neutral) > 0 {
+			fmt.Println("Neutral:")
+			roleNumbers = formatOutput(neutral, roleNumbers, numbered)
+		}
+		if len(anyRole) > 0 {
+			fmt.Println("Any:")
+			_ = formatOutput(anyRole, roleNumbers, numbered)
+		}
+		if len(exeTargets) > 0 {
+			fmt.Println("Executioner Targets:")
+			_ = formatOutput(exeTargets, roleNumbers, false)
+		}
+		if len(gaTargets) > 0 {
+			fmt.Println("Guardian Angel Targets:")
+			_ = formatOutput(gaTargets, roleNumbers, false)
+		}
 	}
 }

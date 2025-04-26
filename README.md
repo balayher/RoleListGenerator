@@ -67,7 +67,8 @@ There are a few scenarios that may influence the randomization:
 - If no Vampires were added upfront or rolled in a Neutral Chaos or Random Neutral slot, Vampire Hunter will be removed as an option from Town and Any rolls.
 - If no Mafia or Coven were added upfront, the Turncoat variant for that faction will be removed as an option from Neutral and Any rolls.
 - If no Town were added upfront, Executioner will be removed as an option from Neutral and Any rolls.
-- If an Executioner is rolled but non of the Town roles selected are eligible to have an Executioner, all Executioners will be changed to Jesters.
+- If an Executioner is rolled but no viable Executioner targets are rolled, all Executioners will be converted to Jesters (even if Jester was banned).
+- If a Guardian Angel is rolled but no viable Guardian Angel targets are rolled, all Guardian Angels will be converted to Survivors (even if Survivor was banned).
 - If either Vampire, Mafia, Coven, or an Executioner viable Town is rolled in an Any slot after these removals, the corresponding Vampire Hunter, Turncoat (if custom roles are turned on), or Executioner role will be readded as an option for the remaining Any rolls if they are not banned (this will *not* apply retroactively to prior rolls).
 - If you add Coven Evil or allow Coven to appear in an Any slot, Witch will be removed as an option from Neutral and Any rolls.
 - If no roles are available before starting generation of a particular category, those roles will be converted to the next inclusive level (i.e. Town Support will convert to Random Town, Random Town will convert to Any, etc.). If the available roles run out *during* generation of a category, the remaining roles for that category will be removed.
