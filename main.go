@@ -158,7 +158,7 @@ func main() {
 
 	// Allows for preventing specific roles from appearing in the role list.
 	// This option may reduce the size of the final list if there are no roles left to generate in a requested category
-	fmt.Print("Do you want to ban any roles? Separate roles with a space, and use a _ for any multiple word role (such as Coven_Leader):\n")
+	fmt.Print("Do you want to ban any roles? Separate roles with a space, and use a _ for any multiple word role (such as 'Coven_Leader'). Turncoat will need a specified faction (i.e. 'Turncoat(Mafia)'):\n")
 	ban, err = getBanInput()
 	if err != nil {
 		fmt.Println("Invalid input, no ban list set")

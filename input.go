@@ -61,7 +61,7 @@ func getBanInput() ([]string, error) {
 	}
 
 	input := strings.Split(strings.ToLower(userVal), " ")
-	for i := 0; i < len(input); i++ {
+	for i := range input {
 		input[i] = strings.TrimSpace(input[i])
 	}
 

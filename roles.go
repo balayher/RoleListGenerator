@@ -166,6 +166,15 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 		"Anarchist",
 	}
 
+	// Defines which Town roles cannot be an Executioner target.
+	nonExe := []string{
+		"Jailor",
+		"Mayor",
+		"Governor",
+		"Monarch",
+		"Prosecutor",
+	}
+
 	// Adds Vampires to random pool if allowed
 	if anyVamp && !slices.Contains(ban, "vampire") {
 		neutralChaos = append(neutralChaos, "Vampire")
@@ -274,6 +283,7 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 
 	// Removes Turncoats from the NE list if either Mafia or Coven doesn't exist.
 	// Removes Witch from the NE list if Coven exists or can be rolled in an Any slot.
+	// Removes Executioner if Town doesn't exist.
 	if len(mafia) == 0 {
 		neutralEvil = removeUnique("Turncoat(Mafia)", neutralEvil)
 	}
@@ -282,6 +292,9 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 	}
 	if len(coven) > 0 || (a > 0 && anyCov) {
 		neutralEvil = removeUnique("Witch", neutralEvil)
+	}
+	if ti+tp+ts+tk+rt == 0 {
+		neutralEvil = removeUnique("Executioner", neutralEvil)
 	}
 
 	// Converts Vampire slots to Random Neutral if banned.
@@ -349,8 +362,8 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 		randomNeutral, neutral = randomRoleSelection(rn, randomNeutral, unique, neutral)
 	}
 
-	// If Vampires exist, adds Vampire Hunter to the Town Killing list.
-	if slices.Contains(neutral, "Vampire") {
+	// If Vampires exist, adds Vampire Hunter to the Town Killing list if it's not banned.
+	if slices.Contains(neutral, "Vampire") && !slices.Contains(ban, "vampire_hunter") {
 		townKilling = append(townKilling, "Vampire_Hunter")
 	}
 
@@ -414,6 +427,25 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 		randomTown, town = randomRoleSelection(rt, randomTown, unique, town)
 	}
 
+	// If Executioner is rolled, checks if a valid Town role was also rolled.
+	// If no valid Town roles exist, all Executioners are converted to Jesters.
+	if slices.Contains(neutral, "Executioner") {
+		validExe := false
+		for i := range town {
+			if !slices.Contains(nonExe, town[i]) {
+				validExe = true
+				break
+			}
+		}
+		if !validExe {
+			for i := range neutral {
+				if neutral[i] == "Executioner" {
+					neutral[i] = "Jester"
+				}
+			}
+		}
+	}
+
 	// Adds all Any roles requested.
 	anyRole := slices.Concat(randomTown, randomNeutral)
 	if anyMaf {
@@ -428,7 +460,7 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 	}
 	if a > 0 {
 		fmt.Printf("Adding %v Any.\n", a)
-		_, allAny = anyRoleSelection(a, anyRole, unique, randomMafia, covenEvil, allAny, custom)
+		_, allAny = anyRoleSelection(a, anyRole, unique, randomTown, nonExe, randomMafia, covenEvil, ban, allAny, custom)
 	}
 
 	// Checks if Mafia only appeared in an Any slot and ensures that a Godfather or Mafioso exists.
@@ -490,7 +522,7 @@ func randomRoleSelection(num int, roleGroup, unique, roles []string) ([]string, 
 }
 
 // Randomly adds an any role to the role list, checks if unique, and checks if previously invalid roles are now valid options.
-func anyRoleSelection(num int, roleGroup, unique, randomMafia, covenEvil, roles []string, custom bool) ([]string, []string) {
+func anyRoleSelection(num int, roleGroup, unique, randomTown, nonExe, randomMafia, covenEvil, ban, roles []string, custom bool) ([]string, []string) {
 	for i := range num {
 		if len(roleGroup) == 0 {
 			fmt.Printf("No valid roles left in category, %v slots removed.\n", num-i)
@@ -500,16 +532,21 @@ func anyRoleSelection(num int, roleGroup, unique, randomMafia, covenEvil, roles 
 		randomRole := roleGroup[randomIdx]
 
 		// Adds Vampire Hunter to the role group if Vampire is rolled.
-		if randomRole == "Vampire" && !slices.Contains(roleGroup, "Vampire_Hunter") {
+		if randomRole == "Vampire" && !slices.Contains(roleGroup, "Vampire_Hunter") && !slices.Contains(ban, "vampire_hunter") {
 			roleGroup = append(roleGroup, "Vampire_Hunter")
 		}
 
 		// Adds Turncoat to role group if Mafia or Coven are rolled and custom roles are turned on.
-		if slices.Contains(randomMafia, randomRole) && !slices.Contains(roleGroup, "Turncoat(Mafia)") && custom {
+		if slices.Contains(randomMafia, randomRole) && !slices.Contains(roleGroup, "Turncoat(Mafia)") && custom && !slices.Contains(ban, "turncoat(mafia)") {
 			roleGroup = append(roleGroup, "Turncoat(Mafia)")
 		}
-		if slices.Contains(covenEvil, randomRole) && !slices.Contains(roleGroup, "Turncoat(Coven)") && custom {
+		if slices.Contains(covenEvil, randomRole) && !slices.Contains(roleGroup, "Turncoat(Coven)") && custom && !slices.Contains(ban, "turncoat(coven)") {
 			roleGroup = append(roleGroup, "Turncoat(Coven)")
+		}
+
+		// Adds Executioner to role group if eligible Town role is added.
+		if slices.Contains(randomTown, randomRole) && !slices.Contains(roleGroup, "Executioner") && !slices.Contains(nonExe, randomRole) && !slices.Contains(ban, "executioner") {
+			roleGroup = append(roleGroup, "Executioner")
 		}
 
 		// Removes role from future rolls if Unique.
