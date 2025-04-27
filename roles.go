@@ -19,6 +19,8 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 	exeTargets := []string{}
 	gaTargets := []string{}
 
+	extra := 0
+
 	// Defines each Town role category.
 	townInvestigative := []string{
 		"Investigator",
@@ -231,12 +233,12 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 		rm, mafiaKilling, mafia = insertGuaranteedRole(rm, mafiaKilling, mafia, "Godfather")
 	} else if mk > 0 {
 		fmt.Println("Adding Godfather or Mafioso.")
-		_, mafia = randomRoleSelection(1, gfMafioso, unique, mafia)
+		_, mafia, _ = randomRoleSelection(1, gfMafioso, unique, mafia)
 		mk--
 		mafiaKilling = removeUnique(mafia[0], mafiaKilling)
 	} else if rm > 0 {
 		fmt.Println("Adding Godfather or Mafioso.")
-		_, mafia = randomRoleSelection(1, gfMafioso, unique, mafia)
+		_, mafia, _ = randomRoleSelection(1, gfMafioso, unique, mafia)
 		rm--
 		mafiaKilling = removeUnique(mafia[0], mafiaKilling)
 	}
@@ -261,15 +263,27 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 	// Adds all Mafia roles requested.
 	if mk > 0 {
 		fmt.Printf("Adding %v Mafia Killing.\n", mk)
-		mafiaKilling, mafia = randomRoleSelection(mk, mafiaKilling, unique, mafia)
+		mafiaKilling, mafia, extra = randomRoleSelection(mk, mafiaKilling, unique, mafia)
+		if extra > 0 {
+			fmt.Printf("Converting %v slots to Random Mafia.\n", extra)
+			rm += extra
+		}
 	}
 	if md > 0 {
 		fmt.Printf("Adding %v Mafia Deception.\n", md)
-		mafiaDeception, mafia = randomRoleSelection(md, mafiaDeception, unique, mafia)
+		mafiaDeception, mafia, extra = randomRoleSelection(md, mafiaDeception, unique, mafia)
+		if extra > 0 {
+			fmt.Printf("Converting %v slots to Random Mafia.\n", extra)
+			rm += extra
+		}
 	}
 	if ms > 0 {
 		fmt.Printf("Adding %v Mafia Support.\n", ms)
-		mafiaSupport, mafia = randomRoleSelection(ms, mafiaSupport, unique, mafia)
+		mafiaSupport, mafia, extra = randomRoleSelection(ms, mafiaSupport, unique, mafia)
+		if extra > 0 {
+			fmt.Printf("Converting %v slots to Random Mafia.\n", extra)
+			rm += extra
+		}
 	}
 
 	randomMafia := slices.Concat(mafiaKilling, mafiaDeception, mafiaSupport)
@@ -280,7 +294,11 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 	}
 	if rm > 0 {
 		fmt.Printf("Adding %v Random Mafia.\n", rm)
-		randomMafia, mafia = randomRoleSelection(rm, randomMafia, unique, mafia)
+		randomMafia, mafia, extra = randomRoleSelection(rm, randomMafia, unique, mafia)
+		if extra > 0 {
+			fmt.Printf("Converting %v slots to Any.\n", extra)
+			a += extra
+		}
 	}
 
 	// Adds rolled Mafia roles to Guardian Angel target list.
@@ -302,7 +320,11 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 	}
 	if ce > 0 {
 		fmt.Printf("Adding %v Coven Evil.\n", ce)
-		covenEvil, coven = randomRoleSelection(ce, covenEvil, unique, coven)
+		covenEvil, coven, extra = randomRoleSelection(ce, covenEvil, unique, coven)
+		if extra > 0 {
+			fmt.Printf("Converting %v slots to Any.\n", extra)
+			a += extra
+		}
 	}
 
 	// Adds rolled Coven roles to Guardian Angel target list.
@@ -365,11 +387,19 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 	// Adds Neutral Killing and Neutral Chaos roles requested.
 	if nk > 0 {
 		fmt.Printf("Adding %v Neutral Killing.\n", nk)
-		neutralKilling, neutral = randomRoleSelection(nk, neutralKilling, unique, neutral)
+		neutralKilling, neutral, extra = randomRoleSelection(nk, neutralKilling, unique, neutral)
+		if extra > 0 {
+			fmt.Printf("Converting %v slots to Random Neutral.\n", extra)
+			rn += extra
+		}
 	}
 	if nc > 0 {
 		fmt.Printf("Adding %v Neutral Chaos.\n", nc)
-		neutralChaos, neutral = randomRoleSelection(nc, neutralChaos, unique, neutral)
+		neutralChaos, neutral, extra = randomRoleSelection(nc, neutralChaos, unique, neutral)
+		if extra > 0 {
+			fmt.Printf("Converting %v slots to Random Neutral.\n", extra)
+			rn += extra
+		}
 	}
 
 	// Adds rolled Neutral roles to Guardian Angel target list.
@@ -381,11 +411,19 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 	numRoles := len(neutral)
 	if ne > 0 {
 		fmt.Printf("Adding %v Neutral Evil.\n", ne)
-		neutralEvil, neutral = randomRoleSelection(ne, neutralEvil, unique, neutral)
+		neutralEvil, neutral, extra = randomRoleSelection(ne, neutralEvil, unique, neutral)
+		if extra > 0 {
+			fmt.Printf("Converting %v slots to Random Neutral.\n", extra)
+			rn += extra
+		}
 	}
 	if nb > 0 {
 		fmt.Printf("Adding %v Neutral Benign.\n", nb)
-		neutralBenign, neutral = randomRoleSelection(nb, neutralBenign, unique, neutral)
+		neutralBenign, neutral, extra = randomRoleSelection(nb, neutralBenign, unique, neutral)
+		if extra > 0 {
+			fmt.Printf("Converting %v slots to Random Neutral.\n", extra)
+			rn += extra
+		}
 	}
 
 	randomNeutral := slices.Concat(neutralKilling, neutralChaos, neutralEvil, neutralBenign)
@@ -396,7 +434,11 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 	}
 	if rn > 0 {
 		fmt.Printf("Adding %v Random Neutral.\n", rn)
-		randomNeutral, neutral = randomRoleSelection(rn, randomNeutral, unique, neutral)
+		randomNeutral, neutral, extra = randomRoleSelection(rn, randomNeutral, unique, neutral)
+		if extra > 0 {
+			fmt.Printf("Converting %v slots to Any.\n", extra)
+			a += extra
+		}
 	}
 	for i := numRoles; i < len(neutral); i++ {
 		if !slices.Contains(nonGA, neutral[i]) {
@@ -443,19 +485,35 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 	// Adds all Town roles requested.
 	if ti > 0 {
 		fmt.Printf("Adding %v Town Investigative.\n", ti)
-		townInvestigative, town = randomRoleSelection(ti, townInvestigative, unique, town)
+		townInvestigative, town, extra = randomRoleSelection(ti, townInvestigative, unique, town)
+		if extra > 0 {
+			fmt.Printf("Converting %v slots to Random Town.\n", extra)
+			rt += extra
+		}
 	}
 	if tp > 0 {
 		fmt.Printf("Adding %v Town Protective.\n", tp)
-		townProtective, town = randomRoleSelection(tp, townProtective, unique, town)
+		townProtective, town, extra = randomRoleSelection(tp, townProtective, unique, town)
+		if extra > 0 {
+			fmt.Printf("Converting %v slots to Random Town.\n", extra)
+			rt += extra
+		}
 	}
 	if ts > 0 {
 		fmt.Printf("Adding %v Town Support.\n", ts)
-		townSupport, town = randomRoleSelection(ts, townSupport, unique, town)
+		townSupport, town, extra = randomRoleSelection(ts, townSupport, unique, town)
+		if extra > 0 {
+			fmt.Printf("Converting %v slots to Random Town.\n", extra)
+			rt += extra
+		}
 	}
 	if tk > 0 {
 		fmt.Printf("Adding %v Town Killing.\n", tk)
-		townKilling, town = randomRoleSelection(tk, townKilling, unique, town)
+		townKilling, town, extra = randomRoleSelection(tk, townKilling, unique, town)
+		if extra > 0 {
+			fmt.Printf("Converting %v slots to Random Town.\n", extra)
+			rt += extra
+		}
 	}
 
 	randomTown := slices.Concat(townInvestigative, townProtective, townSupport, townKilling)
@@ -466,7 +524,11 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 	}
 	if rt > 0 {
 		fmt.Printf("Adding %v Random Town.\n", rt)
-		randomTown, town = randomRoleSelection(rt, randomTown, unique, town)
+		randomTown, town, extra = randomRoleSelection(rt, randomTown, unique, town)
+		if extra > 0 {
+			fmt.Printf("Converting %v slots to Any.\n", extra)
+			a += extra
+		}
 	}
 
 	// Adds rolled Town roles to Guardian Angel target list.
@@ -606,11 +668,11 @@ func removeUnique(role string, rolelist []string) []string {
 }
 
 // Randomly adds an eligible role to the role list and checks if it is unique.
-func randomRoleSelection(num int, roleGroup, unique, roles []string) ([]string, []string) {
+func randomRoleSelection(num int, roleGroup, unique, roles []string) ([]string, []string, int) {
 	for i := range num {
 		if len(roleGroup) == 0 {
-			fmt.Printf("No valid roles left in category, %v slots removed.\n", num-i)
-			return roleGroup, roles
+			fmt.Println("No valid roles left in category.")
+			return roleGroup, roles, num - i
 		}
 		randomIdx := rand.Intn(len(roleGroup))
 		randomRole := roleGroup[randomIdx]
@@ -621,7 +683,7 @@ func randomRoleSelection(num int, roleGroup, unique, roles []string) ([]string, 
 		}
 		roles = append(roles, randomRole)
 	}
-	return roleGroup, roles
+	return roleGroup, roles, 0
 }
 
 // Randomly adds an any role to the role list, checks if unique, and checks if previously invalid roles are now valid options.
