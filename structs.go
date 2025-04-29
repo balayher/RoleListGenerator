@@ -1,6 +1,8 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Counts struct {
 	TI   int `json:"ti"`
@@ -187,6 +189,14 @@ func getCounts() Counts {
 	if err != nil {
 		fmt.Println("Invalid input, Any set to 0")
 	}
+
+	fmt.Println("Do you want to save your role counts to counts.json?")
+	saveCounts := getYesNo(false)
+
+	if saveCounts {
+		saveJson(c, "counts.json")
+	}
+
 	return c
 }
 
@@ -256,6 +266,13 @@ func getOptions(c Counts) Options {
 	// Toggle whether the output is printed to terminal or to the roles.txt file
 	fmt.Print("Would you like your rolelist written to a roles.txt file? ")
 	t.FileWrite = getYesNo(t.FileWrite)
+
+	fmt.Println("Do you want to save your role counts to options.json?")
+	saveOptions := getYesNo(false)
+
+	if saveOptions {
+		saveJson(t, "options.json")
+	}
 
 	return t
 }

@@ -60,3 +60,32 @@ func getJsonOptions(t Options, filename string) (Options, bool) {
 
 	return jsonOptions, true
 }
+
+func saveJson(v any, filename string) {
+	f, err := os.Create(filename)
+	if err != nil {
+		fmt.Println(err)
+		f.Close()
+		return
+	}
+
+	b, err := json.MarshalIndent(&v, "", "\t")
+	if err == nil {
+		fmt.Fprint(f, string(b))
+	}
+
+	err = f.Close()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Printf("%v written successfully\n", filename)
+}
+
+func PrettyPrint(v any) (err error) {
+	b, err := json.MarshalIndent(v, "", "\t")
+	if err == nil {
+		fmt.Println(string(b))
+	}
+	return err
+}

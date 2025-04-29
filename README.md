@@ -23,7 +23,7 @@ go run RoleListGenerator
 
 ## How to Use
 
-When starting the program, you will be asked if you want to load your role counts from a .json file. The role counts are the number of roles to be selected from each role category. If yes, you will be prompted to enter the name of the .json file to use. The structure of this .json file will be detailed below. If you don't want to load from a file (or if there's an error loading from the file), you will be asked for the desired number of roles for each category. This value *must* be an integer, otherwise it will default to 0. Floating numbers will *not* work. The categories include:
+When starting the program, you will be asked if you want to load your role counts from a .json file. The role counts are the number of roles to be selected from each role category. If yes, you will be prompted to enter the name of the .json file to use. The structure of this .json file will be detailed below. If you don't want to load from a file (or if there's an error loading from the file), you will be asked for the desired number of roles for each category. This value *must* be an integer, otherwise it will default to 0. Floating numbers will *not* work. You will also have the option to save your role counts to counts.json for future use (note that this will overwrite your current counts.json file). The categories include:
 
 - Town Investigative
 - Town Protective
@@ -43,7 +43,7 @@ When starting the program, you will be asked if you want to load your role count
 - Random Neutral
 - Any
 
-Next, you will be asked if you want to load your role options from a .json file. If yes, you will be prompted to enter the name of the .json file to use. The structure of this .json file will be detailed below. If you don't want to load from a file (or if there's an error when loading from the file), you will be prompted for each option. Entering anything other than y, yes, n, or no will result in the default value listed below. These options include:
+Next, you will be asked if you want to load your role options from a .json file. If yes, you will be prompted to enter the name of the .json file to use. The structure of this .json file will be detailed below. If you don't want to load from a file (or if there's an error when loading from the file), you will be prompted for each option. Entering anything other than y, yes, n, or no will result in the default value listed below. You will also have the option to save your options to options.json for future use (note that this will overwrite your current options.json file). These options include:
 
 - Do you want a guaranteed Jailor? *(default: no)*
 - Do you want a guaranteed Godfather? *(default: no)*
@@ -53,7 +53,7 @@ Next, you will be asked if you want to load your role options from a .json file.
 - Do you want Coven in the Any pool? *(default: yes)*
 - Do you want to use the custom roles added by the ISFL community? If not, you will only get standard Town of Salem roles. *(default: yes)*
 - Do you want to number the roles in the final role list? *(default: yes)*
-- Do you want the rolelist to be written to roles.txt? If not, they will be printed directly to the terminal. *(default: no)*
+- Do you want the rolelist to be written to roles.txt? If not, they will be printed directly to the terminal (note that this will overwrite your current roles.txt file). *(default: no)*
 
 You will also be asked if you want to ban any role. Each role must be separated by a space. Any role with multiple words must have a _ connecting the words (i.e. 'Coven_Leader'). Turncoat will need it's corresponding faction specified (i.e. 'Turncoat(Mafia)' or 'Turncoat(Coven)'). If you don't want any roles banned, you may leave this blank. Banned roles may override any guaranteed option chosen.
 
