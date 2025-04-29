@@ -7,17 +7,19 @@ import (
 	"strings"
 )
 
-func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, vamp int, jailor, gf, cl, anyMaf, anyCov, anyVamp, custom bool, ban []string) ([]string, []string, []string, []string, []string, []string, []string) {
+func createRoles(c Counts, t Toggles, ban []string) RoleList {
 	// Initializes slices for each faction for the final role list.
-	town := []string{}
-	mafia := []string{}
-	coven := []string{}
-	neutral := []string{}
-	allAny := []string{}
-	exeList := []string{}
-	gaList := []string{}
-	exeTargets := []string{}
-	gaTargets := []string{}
+	rl := RoleList{
+		town:       []string{},
+		mafia:      []string{},
+		coven:      []string{},
+		neutral:    []string{},
+		allAny:     []string{},
+		exeList:    []string{},
+		gaList:     []string{},
+		exeTargets: []string{},
+		gaTargets:  []string{},
+	}
 
 	extra := 0
 
@@ -81,7 +83,6 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 		"Necromancer",
 		"Poisoner",
 	}
-	covenEvil = checkBans(covenEvil, ban)
 
 	// Defines each Netural role category.
 	neutralKilling := []string{
@@ -106,7 +107,7 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 	}
 
 	// If custom roles are toggled on, adds the custom roles to the role category they belong to.
-	if custom {
+	if t.custom {
 		townInvestigative = append(townInvestigative, "Seer", "Detective")
 		townProtective = append(townProtective, "Cleric", "Oracle")
 		townSupport = append(townSupport, "Monarch", "Governor", "Prosecutor", "Jack_of_All_Trades", "Timeshifter")
@@ -197,396 +198,396 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 	}
 
 	// Adds Vampires to random pool if allowed
-	if anyVamp && !slices.Contains(ban, "vampire") {
+	if t.anyVamp && !slices.Contains(ban, "vampire") {
 		neutralChaos = append(neutralChaos, "Vampire")
 	}
 
 	// Cancels guaranteed roles if they are on the ban list
 	if slices.Contains(ban, "jailor") {
-		jailor = false
+		t.jailor = false
 	}
 	if slices.Contains(ban, "godfather") {
-		gf = false
+		t.gf = false
 	}
 	if slices.Contains(ban, "coven_leader") {
-		cl = false
+		t.cl = false
 	}
 
 	// Checks if both Godfather and Mafioso are on the ban list and converts all Mafia slots to Any slots
 	if len(gfMafioso) == 0 {
-		maf := mk + ms + md + rm
+		maf := c.mk + c.ms + c.md + c.rm
 		fmt.Printf("Both Godfather and Mafioso banned, converting %v mafia slots to Any.\n", maf)
-		a += maf
-		mk = 0
-		ms = 0
-		md = 0
-		rm = 0
-		anyMaf = false
+		c.a += maf
+		c.mk = 0
+		c.ms = 0
+		c.md = 0
+		c.rm = 0
+		t.anyMaf = false
 	}
 
 	// Adds Godfather if guaranteed, else adds either Godfather or Mafioso if Mafia exists.
-	if gf && mk > 0 {
+	if t.gf && c.mk > 0 {
 		fmt.Println("Adding Godfather.")
-		mk, mafiaKilling, mafia = insertGuaranteedRole(mk, mafiaKilling, mafia, "Godfather")
-	} else if gf && rm > 0 {
+		c.mk, mafiaKilling, rl.mafia = insertGuaranteedRole(c.mk, mafiaKilling, rl.mafia, "Godfather")
+	} else if t.gf && c.rm > 0 {
 		fmt.Println("Adding Godfather.")
-		rm, mafiaKilling, mafia = insertGuaranteedRole(rm, mafiaKilling, mafia, "Godfather")
-	} else if mk > 0 {
+		c.rm, mafiaKilling, rl.mafia = insertGuaranteedRole(c.rm, mafiaKilling, rl.mafia, "Godfather")
+	} else if c.mk > 0 {
 		fmt.Println("Adding Godfather or Mafioso.")
-		_, mafia, _ = randomRoleSelection(1, gfMafioso, unique, mafia)
-		mk--
-		mafiaKilling = removeUnique(mafia[0], mafiaKilling)
-	} else if rm > 0 {
+		_, rl.mafia, _ = randomRoleSelection(1, gfMafioso, unique, rl.mafia)
+		c.mk--
+		mafiaKilling = removeUnique(rl.mafia[0], mafiaKilling)
+	} else if c.rm > 0 {
 		fmt.Println("Adding Godfather or Mafioso.")
-		_, mafia, _ = randomRoleSelection(1, gfMafioso, unique, mafia)
-		rm--
-		mafiaKilling = removeUnique(mafia[0], mafiaKilling)
+		_, rl.mafia, _ = randomRoleSelection(1, gfMafioso, unique, rl.mafia)
+		c.rm--
+		mafiaKilling = removeUnique(rl.mafia[0], mafiaKilling)
 	}
 
 	// Converts Mafia subcategories to Random Mafia if no roles are available in the subcategory and skips role selection.
-	if len(mafiaKilling) == 0 && mk > 0 {
-		fmt.Printf("No valid Mafia Killing roles, %v slots converted to Random Mafia.\n", mk)
-		rm += mk
-		mk = 0
+	if len(mafiaKilling) == 0 && c.mk > 0 {
+		fmt.Printf("No valid Mafia Killing roles, %v slots converted to Random Mafia.\n", c.mk)
+		c.rm += c.mk
+		c.mk = 0
 	}
-	if len(mafiaDeception) == 0 && md > 0 {
-		fmt.Printf("No valid Mafia Deception roles, %v slots converted to Random Mafia.\n", md)
-		rm += md
-		md = 0
+	if len(mafiaDeception) == 0 && c.md > 0 {
+		fmt.Printf("No valid Mafia Deception roles, %v slots converted to Random Mafia.\n", c.md)
+		c.rm += c.md
+		c.md = 0
 	}
-	if len(mafiaSupport) == 0 && ms > 0 {
-		fmt.Printf("No valid Mafia Support roles, %v slots converted to Random Mafia.\n", ms)
-		rm += ms
-		ms = 0
+	if len(mafiaSupport) == 0 && c.ms > 0 {
+		fmt.Printf("No valid Mafia Support roles, %v slots converted to Random Mafia.\n", c.ms)
+		c.rm += c.ms
+		c.ms = 0
 	}
 
 	// Adds all Mafia roles requested.
-	if mk > 0 {
-		fmt.Printf("Adding %v Mafia Killing.\n", mk)
-		mafiaKilling, mafia, extra = randomRoleSelection(mk, mafiaKilling, unique, mafia)
+	if c.mk > 0 {
+		fmt.Printf("Adding %v Mafia Killing.\n", c.mk)
+		mafiaKilling, rl.mafia, extra = randomRoleSelection(c.mk, mafiaKilling, unique, rl.mafia)
 		if extra > 0 {
 			fmt.Printf("Converting %v slots to Random Mafia.\n", extra)
-			rm += extra
+			c.rm += extra
 		}
 	}
-	if md > 0 {
-		fmt.Printf("Adding %v Mafia Deception.\n", md)
-		mafiaDeception, mafia, extra = randomRoleSelection(md, mafiaDeception, unique, mafia)
+	if c.md > 0 {
+		fmt.Printf("Adding %v Mafia Deception.\n", c.md)
+		mafiaDeception, rl.mafia, extra = randomRoleSelection(c.md, mafiaDeception, unique, rl.mafia)
 		if extra > 0 {
 			fmt.Printf("Converting %v slots to Random Mafia.\n", extra)
-			rm += extra
+			c.rm += extra
 		}
 	}
-	if ms > 0 {
-		fmt.Printf("Adding %v Mafia Support.\n", ms)
-		mafiaSupport, mafia, extra = randomRoleSelection(ms, mafiaSupport, unique, mafia)
+	if c.ms > 0 {
+		fmt.Printf("Adding %v Mafia Support.\n", c.ms)
+		mafiaSupport, rl.mafia, extra = randomRoleSelection(c.ms, mafiaSupport, unique, rl.mafia)
 		if extra > 0 {
 			fmt.Printf("Converting %v slots to Random Mafia.\n", extra)
-			rm += extra
+			c.rm += extra
 		}
 	}
 
 	randomMafia := slices.Concat(mafiaKilling, mafiaDeception, mafiaSupport)
-	if len(randomMafia) == 0 && rm > 0 {
-		fmt.Printf("No valid Mafia roles, %v slots converted to Any.\n", rm)
-		a += rm
-		rm = 0
+	if len(randomMafia) == 0 && c.rm > 0 {
+		fmt.Printf("No valid Mafia roles, %v slots converted to Any.\n", c.rm)
+		c.a += c.rm
+		c.rm = 0
 	}
-	if rm > 0 {
-		fmt.Printf("Adding %v Random Mafia.\n", rm)
-		randomMafia, mafia, extra = randomRoleSelection(rm, randomMafia, unique, mafia)
+	if c.rm > 0 {
+		fmt.Printf("Adding %v Random Mafia.\n", c.rm)
+		randomMafia, rl.mafia, extra = randomRoleSelection(c.rm, randomMafia, unique, rl.mafia)
 		if extra > 0 {
 			fmt.Printf("Converting %v slots to Any.\n", extra)
-			a += extra
+			c.a += extra
 		}
 	}
 
 	// Adds rolled Mafia roles to Guardian Angel target list.
-	if len(mafia) > 0 {
-		gaList = append(gaList, mafia...)
+	if len(rl.mafia) > 0 {
+		rl.gaList = append(rl.gaList, rl.mafia...)
 	}
 
 	// Converts Coven slots to Any if all Coven roles are banned.
-	if len(covenEvil) == 0 && ce > 0 {
-		fmt.Printf("No valid Coven roles, %v slots converted to Any.\n", ce)
-		a += ce
-		ce = 0
+	if len(covenEvil) == 0 && c.ce > 0 {
+		fmt.Printf("No valid Coven roles, %v slots converted to Any.\n", c.ce)
+		c.a += c.ce
+		c.ce = 0
 	}
 
 	// Adds Coven Leader if guaranteed, then adds all Coven roles requested.
-	if cl && ce > 0 {
+	if t.cl && c.ce > 0 {
 		fmt.Println("Adding Coven Leader.")
-		ce, covenEvil, coven = insertGuaranteedRole(ce, covenEvil, coven, "Coven_Leader")
+		c.ce, covenEvil, rl.coven = insertGuaranteedRole(c.ce, covenEvil, rl.coven, "Coven_Leader")
 	}
-	if ce > 0 {
-		fmt.Printf("Adding %v Coven Evil.\n", ce)
-		covenEvil, coven, extra = randomRoleSelection(ce, covenEvil, unique, coven)
+	if c.ce > 0 {
+		fmt.Printf("Adding %v Coven Evil.\n", c.ce)
+		covenEvil, rl.coven, extra = randomRoleSelection(c.ce, covenEvil, unique, rl.coven)
 		if extra > 0 {
 			fmt.Printf("Converting %v slots to Any.\n", extra)
-			a += extra
+			c.a += extra
 		}
 	}
 
 	// Adds rolled Coven roles to Guardian Angel target list.
-	if len(coven) > 0 {
-		gaList = append(gaList, coven...)
+	if len(rl.coven) > 0 {
+		rl.gaList = append(rl.gaList, rl.coven...)
 	}
 
 	// Removes Turncoats from the NE list if either Mafia or Coven doesn't exist.
 	// Removes Witch from the NE list if Coven exists or can be rolled in an Any slot.
 	// Removes Executioner if Town doesn't exist.
-	if len(mafia) == 0 {
+	if len(rl.mafia) == 0 {
 		neutralEvil = removeUnique("Turncoat(Mafia)", neutralEvil)
 	}
-	if len(coven) == 0 {
+	if len(rl.coven) == 0 {
 		neutralEvil = removeUnique("Turncoat(Coven)", neutralEvil)
 	}
-	if len(coven) > 0 || (a > 0 && anyCov) {
+	if len(rl.coven) > 0 || (c.a > 0 && t.anyCov) {
 		neutralEvil = removeUnique("Witch", neutralEvil)
 	}
-	if ti+tp+ts+tk+rt == 0 {
+	if c.ti+c.tp+c.ts+c.tk+c.rt == 0 {
 		neutralEvil = removeUnique("Executioner", neutralEvil)
 	}
 
 	// Converts Vampire slots to Random Neutral if banned.
-	if slices.Contains(ban, "vampire") && vamp > 0 {
-		fmt.Printf("Vampires banned, converting %v Vampire slots to Random Neutral.\n", vamp)
-		rn += vamp
-		vamp = 0
+	if slices.Contains(ban, "vampire") && c.vamp > 0 {
+		fmt.Printf("Vampires banned, converting %v Vampire slots to Random Neutral.\n", c.vamp)
+		c.rn += c.vamp
+		c.vamp = 0
 	}
 	// Adds guaranteed Vampires.
-	if vamp > 0 {
-		fmt.Printf("Adding %v Vampires.\n", vamp)
-		for range vamp {
-			_, _, neutral = insertGuaranteedRole(vamp, neutralChaos, neutral, "Vampire")
+	if c.vamp > 0 {
+		fmt.Printf("Adding %v Vampires.\n", c.vamp)
+		for range c.vamp {
+			_, _, rl.neutral = insertGuaranteedRole(c.vamp, neutralChaos, rl.neutral, "Vampire")
 		}
 	}
 
 	// Converts Neutral subcategories to Random Neutral if no roles are available in the subcategory and skips role selection.
-	if len(neutralKilling) == 0 && nk > 0 {
-		fmt.Printf("No valid Neutral Killing roles, %v slots converted to Random Neutral.\n", nk)
-		rn += nk
-		nk = 0
+	if len(neutralKilling) == 0 && c.nk > 0 {
+		fmt.Printf("No valid Neutral Killing roles, %v slots converted to Random Neutral.\n", c.nk)
+		c.rn += c.nk
+		c.nk = 0
 	}
-	if len(neutralChaos) == 0 && nc > 0 {
-		fmt.Printf("No valid Neutral Chaos roles, %v slots converted to Random Neutral.\n", nc)
-		rn += nc
-		nc = 0
+	if len(neutralChaos) == 0 && c.nc > 0 {
+		fmt.Printf("No valid Neutral Chaos roles, %v slots converted to Random Neutral.\n", c.nc)
+		c.rn += c.nc
+		c.nc = 0
 	}
-	if len(neutralEvil) == 0 && ne > 0 {
-		fmt.Printf("No valid Neutral Evil roles, %v slots converted to Random Neutral.\n", ne)
-		rn += ne
-		ne = 0
+	if len(neutralEvil) == 0 && c.ne > 0 {
+		fmt.Printf("No valid Neutral Evil roles, %v slots converted to Random Neutral.\n", c.ne)
+		c.rn += c.ne
+		c.ne = 0
 	}
-	if len(neutralBenign) == 0 && nb > 0 {
-		fmt.Printf("No valid Neutral Benign roles, %v slots converted to Random Neutral.\n", nb)
-		rn += nb
-		nb = 0
+	if len(neutralBenign) == 0 && c.nb > 0 {
+		fmt.Printf("No valid Neutral Benign roles, %v slots converted to Random Neutral.\n", c.nb)
+		c.rn += c.nb
+		c.nb = 0
 	}
 
 	// Adds Neutral Killing and Neutral Chaos roles requested.
-	if nk > 0 {
-		fmt.Printf("Adding %v Neutral Killing.\n", nk)
-		neutralKilling, neutral, extra = randomRoleSelection(nk, neutralKilling, unique, neutral)
+	if c.nk > 0 {
+		fmt.Printf("Adding %v Neutral Killing.\n", c.nk)
+		neutralKilling, rl.neutral, extra = randomRoleSelection(c.nk, neutralKilling, unique, rl.neutral)
 		if extra > 0 {
 			fmt.Printf("Converting %v slots to Random Neutral.\n", extra)
-			rn += extra
+			c.rn += extra
 		}
 	}
-	if nc > 0 {
-		fmt.Printf("Adding %v Neutral Chaos.\n", nc)
-		neutralChaos, neutral, extra = randomRoleSelection(nc, neutralChaos, unique, neutral)
+	if c.nc > 0 {
+		fmt.Printf("Adding %v Neutral Chaos.\n", c.nc)
+		neutralChaos, rl.neutral, extra = randomRoleSelection(c.nc, neutralChaos, unique, rl.neutral)
 		if extra > 0 {
 			fmt.Printf("Converting %v slots to Random Neutral.\n", extra)
-			rn += extra
+			c.rn += extra
 		}
 	}
 
 	// Adds rolled Neutral roles to Guardian Angel target list.
-	if len(neutral) > 0 {
-		gaList = append(gaList, neutral...)
+	if len(rl.neutral) > 0 {
+		rl.gaList = append(rl.gaList, rl.neutral...)
 	}
 
 	// Adds Neutral Evil, Neutral Benign, and Random Neutral roles requested, then adds eligible ones to Guardian Angel target list.
-	numRoles := len(neutral)
-	if ne > 0 {
-		fmt.Printf("Adding %v Neutral Evil.\n", ne)
-		neutralEvil, neutral, extra = randomRoleSelection(ne, neutralEvil, unique, neutral)
+	numRoles := len(rl.neutral)
+	if c.ne > 0 {
+		fmt.Printf("Adding %v Neutral Evil.\n", c.ne)
+		neutralEvil, rl.neutral, extra = randomRoleSelection(c.ne, neutralEvil, unique, rl.neutral)
 		if extra > 0 {
 			fmt.Printf("Converting %v slots to Random Neutral.\n", extra)
-			rn += extra
+			c.rn += extra
 		}
 	}
-	if nb > 0 {
-		fmt.Printf("Adding %v Neutral Benign.\n", nb)
-		neutralBenign, neutral, extra = randomRoleSelection(nb, neutralBenign, unique, neutral)
+	if c.nb > 0 {
+		fmt.Printf("Adding %v Neutral Benign.\n", c.nb)
+		neutralBenign, rl.neutral, extra = randomRoleSelection(c.nb, neutralBenign, unique, rl.neutral)
 		if extra > 0 {
 			fmt.Printf("Converting %v slots to Random Neutral.\n", extra)
-			rn += extra
+			c.rn += extra
 		}
 	}
 
 	randomNeutral := slices.Concat(neutralKilling, neutralChaos, neutralEvil, neutralBenign)
-	if len(randomNeutral) == 0 && rn > 0 {
-		fmt.Printf("No valid Neutral roles, %v slots converted to Any.\n", rn)
-		a += rn
-		rn = 0
+	if len(randomNeutral) == 0 && c.rn > 0 {
+		fmt.Printf("No valid Neutral roles, %v slots converted to Any.\n", c.rn)
+		c.a += c.rn
+		c.rn = 0
 	}
-	if rn > 0 {
-		fmt.Printf("Adding %v Random Neutral.\n", rn)
-		randomNeutral, neutral, extra = randomRoleSelection(rn, randomNeutral, unique, neutral)
+	if c.rn > 0 {
+		fmt.Printf("Adding %v Random Neutral.\n", c.rn)
+		randomNeutral, rl.neutral, extra = randomRoleSelection(c.rn, randomNeutral, unique, rl.neutral)
 		if extra > 0 {
 			fmt.Printf("Converting %v slots to Any.\n", extra)
-			a += extra
+			c.a += extra
 		}
 	}
-	for i := numRoles; i < len(neutral); i++ {
-		if !slices.Contains(nonGA, neutral[i]) {
-			gaList = append(gaList, neutral[i])
+	for i := numRoles; i < len(rl.neutral); i++ {
+		if !slices.Contains(nonGA, rl.neutral[i]) {
+			rl.gaList = append(rl.gaList, rl.neutral[i])
 		}
 	}
 
 	// If Vampires exist, adds Vampire Hunter to the Town Killing list if it's not banned.
-	if slices.Contains(neutral, "Vampire") && !slices.Contains(ban, "vampire_hunter") {
+	if slices.Contains(rl.neutral, "Vampire") && !slices.Contains(ban, "vampire_hunter") {
 		townKilling = append(townKilling, "Vampire_Hunter")
 	}
 
 	// Adds Jailor if guaranteed.
-	if jailor && tk > 0 {
+	if t.jailor && c.tk > 0 {
 		fmt.Println("Adding Jailor.")
-		tk, townKilling, town = insertGuaranteedRole(tk, townKilling, town, "Jailor")
-	} else if jailor && rt > 0 {
+		c.tk, townKilling, rl.town = insertGuaranteedRole(c.tk, townKilling, rl.town, "Jailor")
+	} else if t.jailor && c.rt > 0 {
 		fmt.Println("Adding Jailor.")
-		rt, townKilling, town = insertGuaranteedRole(rt, townKilling, town, "Jailor")
+		c.rt, townKilling, rl.town = insertGuaranteedRole(c.rt, townKilling, rl.town, "Jailor")
 	}
 
 	// Converts Town subcategories to Random Town if no roles are available in the subcategory and skips role selection.
-	if len(townInvestigative) == 0 && ti > 0 {
-		fmt.Printf("No valid Town Investigative roles, %v slots converted to Random Town.\n", ti)
-		rt += ti
-		ti = 0
+	if len(townInvestigative) == 0 && c.ti > 0 {
+		fmt.Printf("No valid Town Investigative roles, %v slots converted to Random Town.\n", c.ti)
+		c.rt += c.ti
+		c.ti = 0
 	}
-	if len(townProtective) == 0 && tp > 0 {
-		fmt.Printf("No valid Town Protective roles, %v slots converted to Random Town.\n", tp)
-		rt += tp
-		tp = 0
+	if len(townProtective) == 0 && c.tp > 0 {
+		fmt.Printf("No valid Town Protective roles, %v slots converted to Random Town.\n", c.tp)
+		c.rt += c.tp
+		c.tp = 0
 	}
-	if len(townSupport) == 0 && ts > 0 {
-		fmt.Printf("No valid Town Support roles, %v slots converted to Random Town.\n", ts)
-		rt += ts
-		ts = 0
+	if len(townSupport) == 0 && c.ts > 0 {
+		fmt.Printf("No valid Town Support roles, %v slots converted to Random Town.\n", c.ts)
+		c.rt += c.ts
+		c.ts = 0
 	}
-	if len(townKilling) == 0 && tk > 0 {
-		fmt.Printf("No valid Town Killing roles, %v slots converted to Random Town.\n", tk)
-		rt += tk
-		tk = 0
+	if len(townKilling) == 0 && c.tk > 0 {
+		fmt.Printf("No valid Town Killing roles, %v slots converted to Random Town.\n", c.tk)
+		c.rt += c.tk
+		c.tk = 0
 	}
 
 	// Adds all Town roles requested.
-	if ti > 0 {
-		fmt.Printf("Adding %v Town Investigative.\n", ti)
-		townInvestigative, town, extra = randomRoleSelection(ti, townInvestigative, unique, town)
+	if c.ti > 0 {
+		fmt.Printf("Adding %v Town Investigative.\n", c.ti)
+		townInvestigative, rl.town, extra = randomRoleSelection(c.ti, townInvestigative, unique, rl.town)
 		if extra > 0 {
 			fmt.Printf("Converting %v slots to Random Town.\n", extra)
-			rt += extra
+			c.rt += extra
 		}
 	}
-	if tp > 0 {
-		fmt.Printf("Adding %v Town Protective.\n", tp)
-		townProtective, town, extra = randomRoleSelection(tp, townProtective, unique, town)
+	if c.tp > 0 {
+		fmt.Printf("Adding %v Town Protective.\n", c.tp)
+		townProtective, rl.town, extra = randomRoleSelection(c.tp, townProtective, unique, rl.town)
 		if extra > 0 {
 			fmt.Printf("Converting %v slots to Random Town.\n", extra)
-			rt += extra
+			c.rt += extra
 		}
 	}
-	if ts > 0 {
-		fmt.Printf("Adding %v Town Support.\n", ts)
-		townSupport, town, extra = randomRoleSelection(ts, townSupport, unique, town)
+	if c.ts > 0 {
+		fmt.Printf("Adding %v Town Support.\n", c.ts)
+		townSupport, rl.town, extra = randomRoleSelection(c.ts, townSupport, unique, rl.town)
 		if extra > 0 {
 			fmt.Printf("Converting %v slots to Random Town.\n", extra)
-			rt += extra
+			c.rt += extra
 		}
 	}
-	if tk > 0 {
-		fmt.Printf("Adding %v Town Killing.\n", tk)
-		townKilling, town, extra = randomRoleSelection(tk, townKilling, unique, town)
+	if c.tk > 0 {
+		fmt.Printf("Adding %v Town Killing.\n", c.tk)
+		townKilling, rl.town, extra = randomRoleSelection(c.tk, townKilling, unique, rl.town)
 		if extra > 0 {
 			fmt.Printf("Converting %v slots to Random Town.\n", extra)
-			rt += extra
+			c.rt += extra
 		}
 	}
 
 	randomTown := slices.Concat(townInvestigative, townProtective, townSupport, townKilling)
-	if len(randomTown) == 0 && rt > 0 {
-		fmt.Printf("No valid Random Town roles, %v slots converted to Any.\n", a)
-		a += rt
-		rt = 0
+	if len(randomTown) == 0 && c.rt > 0 {
+		fmt.Printf("No valid Random Town roles, %v slots converted to Any.\n", c.a)
+		c.a += c.rt
+		c.rt = 0
 	}
-	if rt > 0 {
-		fmt.Printf("Adding %v Random Town.\n", rt)
-		randomTown, town, extra = randomRoleSelection(rt, randomTown, unique, town)
+	if c.rt > 0 {
+		fmt.Printf("Adding %v Random Town.\n", c.rt)
+		randomTown, rl.town, extra = randomRoleSelection(c.rt, randomTown, unique, rl.town)
 		if extra > 0 {
 			fmt.Printf("Converting %v slots to Any.\n", extra)
-			a += extra
+			c.a += extra
 		}
 	}
 
 	// Adds rolled Town roles to Guardian Angel target list.
-	if len(town) > 0 {
-		gaList = append(gaList, town...)
+	if len(rl.town) > 0 {
+		rl.gaList = append(rl.gaList, rl.town...)
 	}
 	// Adds eligible Town roles to Executioner target list.
-	for i := range town {
-		if !slices.Contains(nonExe, town[i]) {
-			exeList = append(exeList, town[i])
+	for i := range rl.town {
+		if !slices.Contains(nonExe, rl.town[i]) {
+			rl.exeList = append(rl.exeList, rl.town[i])
 		}
 	}
 
 	// Adds all Any roles requested.
 	anyRole := slices.Concat(randomTown, randomNeutral)
-	if anyMaf {
+	if t.anyMaf {
 		anyRole = slices.Concat(anyRole, randomMafia)
 	}
-	if anyCov {
+	if t.anyCov {
 		anyRole = slices.Concat(anyRole, covenEvil)
 	}
-	if len(anyRole) == 0 && a > 0 {
-		fmt.Printf("No valid Any roles, %v slots removed.\n", a)
-		a = 0
+	if len(anyRole) == 0 && c.a > 0 {
+		fmt.Printf("No valid Any roles, %v slots removed.\n", c.a)
+		c.a = 0
 	}
-	if a > 0 {
-		fmt.Printf("Adding %v Any.\n", a)
-		_, allAny = anyRoleSelection(a, anyRole, unique, randomTown, nonExe, randomMafia, covenEvil, ban, allAny, custom)
+	if c.a > 0 {
+		fmt.Printf("Adding %v Any.\n", c.a)
+		_, rl.allAny = anyRoleSelection(c.a, anyRole, unique, randomTown, nonExe, randomMafia, covenEvil, ban, rl.allAny, t.custom)
 	}
 
 	// Adds eligible Any roles to the GA and Executioner target lists
-	for i := range allAny {
-		if !slices.Contains(nonExe, allAny[i]) && (slices.Contains(randomTown, allAny[i]) || slices.Contains(uniqueExe, allAny[i])) {
-			exeList = append(exeList, allAny[i])
+	for i := range rl.allAny {
+		if !slices.Contains(nonExe, rl.allAny[i]) && (slices.Contains(randomTown, rl.allAny[i]) || slices.Contains(uniqueExe, rl.allAny[i])) {
+			rl.exeList = append(rl.exeList, rl.allAny[i])
 		}
-		if !slices.Contains(nonGA, allAny[i]) {
-			gaList = append(gaList, allAny[i])
+		if !slices.Contains(nonGA, rl.allAny[i]) {
+			rl.gaList = append(rl.gaList, rl.allAny[i])
 		}
 	}
 
 	// Checks if Mafia only appeared in an Any slot and ensures that a Godfather or Mafioso exists.
 	// Replaces the first Mafia on the list with either Godfather or Mafioso if one does not already exist.
-	if len(mafia) == 0 && anyMaf && len(allAny) > 0 && !slices.Contains(allAny, "Godfather") && !slices.Contains(allAny, "Mafia") {
-		for i := range allAny {
-			if slices.Contains(randomMafia, allAny[i]) {
+	if len(rl.mafia) == 0 && t.anyMaf && len(rl.allAny) > 0 && !slices.Contains(rl.allAny, "Godfather") && !slices.Contains(rl.allAny, "Mafioso") {
+		for i := range rl.allAny {
+			if slices.Contains(randomMafia, rl.allAny[i]) {
 				if slices.Contains(ban, "godfather") {
-					allAny[i] = "Mafioso"
+					rl.allAny[i] = "Mafioso"
 					break
 				}
 				if slices.Contains(ban, "mafioso") {
-					allAny[i] = "Godfather"
+					rl.allAny[i] = "Godfather"
 					break
 				}
 				randInt := rand.Intn(2)
 				if randInt == 0 {
-					allAny[i] = "Godfather"
+					rl.allAny[i] = "Godfather"
 				} else {
-					allAny[i] = "Mafioso"
+					rl.allAny[i] = "Mafioso"
 				}
 				break
 			}
@@ -595,18 +596,18 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 
 	// If Executioner is rolled, checks if a valid target was also rolled.
 	// If no valid targets, all Executioners are converted to Jesters.
-	if slices.Contains(neutral, "Executioner") && len(exeList) == 0 {
-		for i := range neutral {
-			if neutral[i] == "Executioner" {
-				neutral[i] = "Jester"
+	if slices.Contains(rl.neutral, "Executioner") && len(rl.exeList) == 0 {
+		for i := range rl.neutral {
+			if rl.neutral[i] == "Executioner" {
+				rl.neutral[i] = "Jester"
 			}
 		}
 		fmt.Println("No valid Executioner targets, converting to Jester")
 	}
-	if slices.Contains(allAny, "Executioner") && len(exeList) == 0 {
-		for i := range allAny {
-			if allAny[i] == "Executioner" {
-				allAny[i] = "Jester"
+	if slices.Contains(rl.allAny, "Executioner") && len(rl.exeList) == 0 {
+		for i := range rl.allAny {
+			if rl.allAny[i] == "Executioner" {
+				rl.allAny[i] = "Jester"
 			}
 		}
 		fmt.Println("No valid Executioner targets, converting to Jester")
@@ -614,45 +615,45 @@ func createRoles(ti, tp, ts, tk, rt, mk, ms, md, rm, ce, nk, nc, ne, nb, rn, a, 
 
 	// If Guardian Angel is rolled, checks if a valid target was also rolled.
 	// If no valid targets, all Guardian Angels are converted to Survivors.
-	if slices.Contains(neutral, "Guardian_Angel") && len(gaList) == 0 {
-		for i := range neutral {
-			if neutral[i] == "Guardian_Angel" {
-				neutral[i] = "Survivor"
+	if slices.Contains(rl.neutral, "Guardian_Angel") && len(rl.gaList) == 0 {
+		for i := range rl.neutral {
+			if rl.neutral[i] == "Guardian_Angel" {
+				rl.neutral[i] = "Survivor"
 			}
 		}
 		fmt.Println("No valid GA targets, converting to Survivor")
 	}
-	if slices.Contains(allAny, "Guardian_Angel") && len(gaList) == 0 {
-		for i := range allAny {
-			if allAny[i] == "Guardian_Angel" {
-				allAny[i] = "Survivor"
+	if slices.Contains(rl.allAny, "Guardian_Angel") && len(rl.gaList) == 0 {
+		for i := range rl.allAny {
+			if rl.allAny[i] == "Guardian_Angel" {
+				rl.allAny[i] = "Survivor"
 			}
 		}
 		fmt.Println("No valid GA targets, converting to Survivor")
 	}
 
 	// Labels Executioner and Guardian Angel targets for roles appearing multiple times.
-	if len(exeList) > 0 {
-		exeList = labelTargets(exeList)
+	if len(rl.exeList) > 0 {
+		rl.exeList = labelTargets(rl.exeList)
 	}
-	if len(gaList) > 0 {
-		gaList = labelTargets(gaList)
+	if len(rl.gaList) > 0 {
+		rl.gaList = labelTargets(rl.gaList)
 	}
 	// Assigns Executioner and Guardian Angel targets.
-	if slices.Contains(neutral, "Executioner") {
-		exeTargets = addTargets(neutral, exeList, exeTargets, "Executioner")
+	if slices.Contains(rl.neutral, "Executioner") {
+		rl.exeTargets = addTargets(rl.neutral, rl.exeList, rl.exeTargets, "Executioner")
 	}
-	if slices.Contains(neutral, "Guardian_Angel") {
-		gaTargets = addTargets(neutral, gaList, gaTargets, "Guardian_Angel")
+	if slices.Contains(rl.neutral, "Guardian_Angel") {
+		rl.gaTargets = addTargets(rl.neutral, rl.gaList, rl.gaTargets, "Guardian_Angel")
 	}
-	if slices.Contains(allAny, "Executioner") {
-		exeTargets = addTargets(allAny, exeList, exeTargets, "Executioner")
+	if slices.Contains(rl.allAny, "Executioner") {
+		rl.exeTargets = addTargets(rl.allAny, rl.exeList, rl.exeTargets, "Executioner")
 	}
-	if slices.Contains(allAny, "Guardian_Angel") {
-		gaTargets = addTargets(allAny, gaList, gaTargets, "Guardian_Angel")
+	if slices.Contains(rl.allAny, "Guardian_Angel") {
+		rl.gaTargets = addTargets(rl.allAny, rl.gaList, rl.gaTargets, "Guardian_Angel")
 	}
 
-	return town, mafia, coven, neutral, allAny, exeTargets, gaTargets
+	return rl
 }
 
 // Removes Unique roles from the role category when the role is added to the list.

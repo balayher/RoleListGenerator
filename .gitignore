@@ -27,3 +27,5 @@ go.work.sum
 # bin and output files
 RoleListGenerator
 roles.txt
+*.txt
+*.json

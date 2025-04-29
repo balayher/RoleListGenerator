@@ -24,7 +24,6 @@ func getInput() (int, error) {
 	if err != nil {
 		return 0, err
 	}
-
 	return intVal, nil
 }
 
