@@ -15,8 +15,8 @@ func main() {
 	// Seeding randomization
 	rand.New(rand.NewSource(time.Now().UnixNano()))
 
-	c := getCounts(false)
-	t := getToggles(c, false)
+	c := getCounts()
+	t := getOptions(c)
 
 	// Allows for preventing specific roles from appearing in the role list.
 	// This option may reduce the size of the final list if there are no roles left to generate in a requested category
@@ -33,7 +33,7 @@ func main() {
 	totalRoles := len(rl.town) + len(rl.mafia) + len(rl.coven) + len(rl.neutral) + len(rl.allAny)
 
 	// Setup for numbering roles if option is on
-	if t.numbered {
+	if t.Numbered {
 		for i := 1; i < totalRoles+1; i++ {
 			roleNumbers = append(roleNumbers, i)
 		}
@@ -44,7 +44,7 @@ func main() {
 
 	// Writes the roles to roles.txt if option is selected.
 	// Otherwise prints the roles to the terminal.
-	if t.fileWrite {
+	if t.FileWrite {
 		f, err := os.Create("roles.txt")
 		if err != nil {
 			fmt.Println(err)
@@ -53,23 +53,23 @@ func main() {
 		}
 		if len(rl.town) > 0 {
 			fmt.Fprintln(f, "Town:")
-			roleNumbers = fileOutput(rl.town, roleNumbers, t.numbered, f)
+			roleNumbers = fileOutput(rl.town, roleNumbers, t.Numbered, f)
 		}
 		if len(rl.mafia) > 0 {
 			fmt.Fprintln(f, "Mafia:")
-			roleNumbers = fileOutput(rl.mafia, roleNumbers, t.numbered, f)
+			roleNumbers = fileOutput(rl.mafia, roleNumbers, t.Numbered, f)
 		}
 		if len(rl.coven) > 0 {
 			fmt.Fprintln(f, "Coven:")
-			roleNumbers = fileOutput(rl.coven, roleNumbers, t.numbered, f)
+			roleNumbers = fileOutput(rl.coven, roleNumbers, t.Numbered, f)
 		}
 		if len(rl.neutral) > 0 {
 			fmt.Fprintln(f, "Neutral:")
-			roleNumbers = fileOutput(rl.neutral, roleNumbers, t.numbered, f)
+			roleNumbers = fileOutput(rl.neutral, roleNumbers, t.Numbered, f)
 		}
 		if len(rl.allAny) > 0 {
 			fmt.Fprintln(f, "Any:")
-			_ = fileOutput(rl.allAny, roleNumbers, t.numbered, f)
+			_ = fileOutput(rl.allAny, roleNumbers, t.Numbered, f)
 		}
 		if len(rl.exeTargets) > 0 {
 			fmt.Fprintln(f, "Executioner Targets:")
@@ -89,23 +89,23 @@ func main() {
 	} else {
 		if len(rl.town) > 0 {
 			fmt.Println("Town:")
-			roleNumbers = formatOutput(rl.town, roleNumbers, t.numbered)
+			roleNumbers = formatOutput(rl.town, roleNumbers, t.Numbered)
 		}
 		if len(rl.mafia) > 0 {
 			fmt.Println("Mafia:")
-			roleNumbers = formatOutput(rl.mafia, roleNumbers, t.numbered)
+			roleNumbers = formatOutput(rl.mafia, roleNumbers, t.Numbered)
 		}
 		if len(rl.coven) > 0 {
 			fmt.Println("Coven:")
-			roleNumbers = formatOutput(rl.coven, roleNumbers, t.numbered)
+			roleNumbers = formatOutput(rl.coven, roleNumbers, t.Numbered)
 		}
 		if len(rl.neutral) > 0 {
 			fmt.Println("Neutral:")
-			roleNumbers = formatOutput(rl.neutral, roleNumbers, t.numbered)
+			roleNumbers = formatOutput(rl.neutral, roleNumbers, t.Numbered)
 		}
 		if len(rl.allAny) > 0 {
 			fmt.Println("Any:")
-			_ = formatOutput(rl.allAny, roleNumbers, t.numbered)
+			_ = formatOutput(rl.allAny, roleNumbers, t.Numbered)
 		}
 		if len(rl.exeTargets) > 0 {
 			fmt.Println("Executioner Targets:")

@@ -50,6 +50,24 @@ func getYesNo(defVal bool) bool {
 	return defVal
 }
 
+// Gets the name of a json file for quick input
+func getJsonName() (string, bool) {
+	userInput := bufio.NewReader(os.Stdin)
+	userVal, _ := userInput.ReadString('\n')
+
+	input := strings.TrimSpace(userVal)
+	if input == "" {
+		fmt.Println("No filename found")
+		return "", false
+	}
+
+	if strings.HasSuffix(input, ".json") {
+		return input, true
+	}
+
+	return input + ".json", true
+}
+
 // Gets user input for a list of roles banned from generation, defaulting to none.
 // Formats the submitted roles to remove white space and ignore capitalization.
 func getBanInput() ([]string, error) {
